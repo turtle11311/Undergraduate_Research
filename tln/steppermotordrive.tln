@@ -1,0 +1,116 @@
+
+=======================================
+>Process steppermotordrive
+=======================================
+AND nodes =    157.  Estimate =    323.
+# TLN description starts
+   StepDrive[0] =   0      n0_DFFX1_7 =   0
+   StepDrive[1] =   0      n0_DFFX1_8 =   0
+   StepDrive[2] =   0     n0_DFFX1_21 =   0
+   StepDrive[3] =   0     n0_DFFX1_26 =   0
+            n59 =  -1    n0_DFFSRX1_5 =  -1   n0_DFFSRX1_24 =  -1 
+            n62 =  -2             n59 =   2   n0_DFFSRX1_22 =  -2     n0_DFFX1_32 =  -1     n0_DFFX1_34 =  -1 
+            n63 =   0     n0_DFFX1_39 =  -1             n59 =   1 
+            n68 =  -1             n62 =  -1             n63 =  -1    n0_DFFSRX1_3 =   1   n0_DFFSRX1_17 =   1   n0_DFFSRX1_15 =   1   n0_DFFSRX1_28 =   1 
+            n70 =  -2             n68 =  -1    n0_DFFSRX1_1 =  -1   n0_DFFSRX1_10 =  -1 
+            n75 =  -1     n0_DFFX1_40 =  -1   n0_DFFSRX1_53 =  -1 
+            n76 =  -1   n0_DFFSRX1_22 =  -1     n0_DFFX1_34 =  -1 
+            n71 =  -1     n0_DFFX1_33 =  -1   n0_DFFSRX1_37 =  -1 
+            n72 =  -1   n0_DFFSRX1_49 =  -1   n0_DFFSRX1_51 =  -1 
+            n73 =   0     n0_DFFX1_32 =  -1             n72 =   1 
+            n79 =   1             n63 =   1             n75 =   1             n76 =   1             n71 =   1             n73 =   1 
+            n81 =  -2    n0_DFFSRX1_3 =  -1   n0_DFFSRX1_17 =  -1   n0_DFFSRX1_28 =  -1 
+            n84 =   3    n0_DFFSRX1_1 =   3             n79 =   1   n0_DFFSRX1_15 =  -1             n81 =   1 
+            n86 =   0             n84 =  -4    n0_DFFSRX1_1 =   1             n79 =   1   n0_DFFSRX1_15 =  -1             n81 =   1 
+            n87 =   1             n70 =   1             n86 =  -1 
+           n274 =   0             n87 =   0
+            n88 =   0   n0_DFFSRX1_37 =  -1             n75 =   1 
+            n91 =  -1             n88 =   1             n72 =   1     n0_DFFX1_33 =  -1     n0_DFFX1_34 =  -1 
+            n95 =  -3             n91 =   1   n0_DFFSRX1_22 =  -1     n0_DFFX1_39 =  -1   n0_DFFSRX1_24 =  -1     n0_DFFX1_32 =  -1 
+            n99 =   2    n0_DFFSRX1_3 =   5             n95 =   1    n0_DFFSRX1_5 =  -1   n0_DFFSRX1_15 =  -1   n0_DFFSRX1_17 =  -1   n0_DFFSRX1_28 =  -1 
+           n100 =  -3    n0_DFFSRX1_3 =   1             n95 =   1    n0_DFFSRX1_5 =  -1   n0_DFFSRX1_15 =  -1   n0_DFFSRX1_17 =  -1   n0_DFFSRX1_28 =  -1 
+           n102 =   2             n70 =   2             n99 =   1            n100 =  -1 
+           n288 =   0            n102 =   0
+           n103 =   0    n0_DFFSRX1_5 =   1             n95 =  -1 
+           n106 =   4             n70 =   2            n103 =   2    n0_DFFSRX1_5 =  -1             n95 =   1 
+           n302 =   0            n106 =   0
+           n112 =   2      n0_DFFX1_7 =   1             n70 =   1 
+           n113 =   0 ProvideStaticHolding =  -1     n0_DFFX1_27 =  -1 
+           n114 =   0             n70 =   1            n113 =  -1 
+           n107 =   0     n0_DFFX1_27 =  -1             n70 =   1 
+           n108 =   0   n0_DFFSRX1_19 =  -1   n0_DFFSRX1_35 =   1 
+           n110 =   2            n108 =   2   n0_DFFSRX1_19 =   1   n0_DFFSRX1_35 =  -1 
+           n116 =  -2            n112 =   2            n114 =  -2            n107 =  -1            n110 =  -1 
+           n310 =   0            n116 =   0
+           n117 =   1            n107 =  -1            n110 =   1 
+           n120 =   0            n117 =   2            n114 =  -2      n0_DFFX1_8 =   1             n70 =   1 
+           n318 =   0            n120 =   0
+           n125 =  -1             n76 =   1     n0_DFFX1_32 =  -1   n0_DFFSRX1_51 =  -1 
+           n121 =  -1    n0_DFFSRX1_1 =  -1   n0_DFFSRX1_49 =  -1 
+           n127 =  -3   n0_DFFSRX1_24 =  -1     n0_DFFX1_39 =  -1    n0_DFFSRX1_5 =  -1   n0_DFFSRX1_15 =  -1 
+           n130 =   1             n71 =   1            n125 =   1             n75 =   1            n121 =   1             n81 =   1            n127 =   1 
+           n132 =   1   n0_DFFSRX1_10 =   1            n130 =   1 
+           n133 =   1            n132 =   2   n0_DFFSRX1_10 =  -1            n130 =  -1 
+           n134 =   1             n70 =   1            n133 =  -1 
+           n333 =   0            n134 =   0
+           n135 =   0   n0_DFFSRX1_15 =   1             n79 =  -1 
+           n138 =   4             n70 =   2            n135 =   2   n0_DFFSRX1_15 =  -1             n79 =   1 
+           n350 =   0            n138 =   0
+           n140 =   0     n0_DFFX1_39 =  -1             n75 =   1             n76 =   1             n71 =   1             n73 =   1 
+           n144 =   3   n0_DFFSRX1_17 =   4            n140 =   1             n59 =   1   n0_DFFSRX1_15 =  -1   n0_DFFSRX1_28 =  -1 
+           n146 =  -1            n144 =  -5   n0_DFFSRX1_17 =   1            n140 =   1             n59 =   1   n0_DFFSRX1_15 =  -1   n0_DFFSRX1_28 =  -1 
+           n147 =   1             n70 =   1            n146 =  -1 
+           n364 =   0            n147 =   0
+           n149 =  -1       Direction =  -1            n110 =  -1 
+           n151 =   3            n107 =   3            n149 =   2       Direction =   1            n110 =   1 
+           n153 =   2            n151 =   2   n0_DFFSRX1_19 =   1            n107 =  -1 
+           n378 =   0            n153 =   0
+           n157 =  -1             n70 =  -2            n113 =  -2   n0_DFFSRX1_19 =  -1     n0_DFFX1_27 =  -1 
+           n158 =   0            n157 =  -2     n0_DFFX1_21 =   1             n70 =  -1 
+           n386 =   0            n158 =   0
+           n159 =   1             n71 =   1             n75 =   1 
+           n162 =   3   n0_DFFSRX1_22 =   3             n73 =   1     n0_DFFX1_34 =  -1            n159 =   1 
+           n164 =   0            n162 =  -4   n0_DFFSRX1_22 =   1             n73 =   1     n0_DFFX1_34 =  -1            n159 =   1 
+           n165 =   1             n70 =   1            n164 =  -1 
+           n400 =   0            n165 =   0
+           n166 =   0   n0_DFFSRX1_24 =   1            n140 =  -1 
+           n169 =   4             n70 =   2            n166 =   2   n0_DFFSRX1_24 =  -1            n140 =   1 
+           n414 =   0            n169 =   0
+           n172 =   1             n70 =  -1   n0_DFFSRX1_19 =  -1     n0_DFFX1_27 =   1 
+           n174 =   0            n114 =  -2            n172 =   2     n0_DFFX1_26 =   1             n70 =   1 
+           n422 =   0            n174 =   0
+           n176 =   2      StepEnable =   2     n0_DFFX1_27 =   1             n70 =   1 
+           n430 =   0            n176 =   0
+           n177 =   0   n0_DFFSRX1_49 =  -1            n159 =   1 
+           n178 =   1            n125 =   1            n177 =   1 
+           n180 =   3   n0_DFFSRX1_28 =   2            n127 =   1            n178 =   1 
+           n182 =   1            n180 =  -3   n0_DFFSRX1_28 =   1            n127 =   1            n178 =   1 
+           n183 =   1             n70 =   1            n182 =  -1 
+           n444 =   0            n183 =   0
+           n184 =   0     n0_DFFX1_32 =   1             n91 =  -1 
+           n187 =   4             n70 =   2            n184 =   2     n0_DFFX1_32 =  -1             n91 =   1 
+           n453 =   0            n187 =   0
+           n190 =   4             n70 =   2            n159 =   2     n0_DFFX1_33 =   1             n88 =  -1 
+           n461 =   0            n190 =   0
+           n191 =   1             n72 =   1            n159 =   1 
+           n193 =   0     n0_DFFX1_34 =  -1            n191 =   1 
+           n195 =   4             n70 =   2            n193 =   2     n0_DFFX1_34 =   1            n191 =  -1 
+           n469 =   0            n195 =   0
+           n196 =   2   n0_DFFSRX1_35 =   1            n107 =   1 
+           n198 =   0            n196 =   2   n0_DFFSRX1_35 =  -1            n107 =  -1 
+           n483 =   0            n198 =   0
+           n201 =   4             n70 =   2             n88 =   2   n0_DFFSRX1_37 =   1             n75 =  -1 
+           n497 =   0            n201 =   0
+           n202 =   0     n0_DFFX1_39 =   1            n178 =  -1 
+           n205 =   4             n70 =   2            n202 =   2     n0_DFFX1_39 =  -1            n178 =   1 
+           n505 =   0            n205 =   0
+           n206 =   1     n0_DFFX1_40 =  -1             n70 =   1 
+           n513 =   0            n206 =   0
+           n209 =   4             n70 =   2            n177 =   2   n0_DFFSRX1_49 =   1            n159 =  -1 
+           n541 =   0            n209 =   0
+           n212 =   4             n70 =   2            n191 =   2   n0_DFFSRX1_51 =   1            n177 =  -1 
+           n555 =   0            n212 =   0
+           n215 =   5             n70 =   2             n75 =   2     n0_DFFX1_40 =   1   n0_DFFSRX1_53 =   1 
+           n569 =   0            n215 =   0
+# Total Weight + ThValue 437
+# Total Node Count 79

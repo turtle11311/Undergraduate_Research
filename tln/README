@@ -1,0 +1,4 @@
+1. The description of TLN starts from Line 7.
+2. Each line starts with the node name and the threshold value, followed by the fanin names and the corresponding weights.
+3. In a line, if the threshold value and all the weights are 0, the node is a buffer or a PO. It is not accounted for the total threshold logic gate count.
+4. The sum of total weights and threshold values, and the gate count are listed at the last two lines.
