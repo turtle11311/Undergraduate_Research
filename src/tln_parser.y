@@ -21,7 +21,7 @@ statements              : statements statement
                         | statement
                         ;
 
-statement               : thresholds NL
+statement               : threshold thresholds NL
                         ;
 
 thresholds              : thresholds threshold
