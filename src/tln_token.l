@@ -15,8 +15,8 @@
 <INITIAL>{
     "#"                 BEGIN(COMMENT);
     \n                  return NL;
-    [[:alnum:]_[]-]+    { yylval.tok_str = strdup(yytext); return _tok_IDENTIFY; }
     [+-]?[[:digit:]]+   { sscanf(yytext, "%d", &yylval.num); return _tok_NUMBER; }
+    [[:alnum:]_\[\]]+   { yylval.tok_str = strdup(yytext); return _tok_IDENTIFY; }
     [[:blank:]]+        ;
     .                   return *yytext;
 }

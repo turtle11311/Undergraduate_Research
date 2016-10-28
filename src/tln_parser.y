@@ -5,7 +5,7 @@ extern int yylex(void);
 extern int yylineno;
 extern char* yytext;
 int yyerror(const char* text) {
-    fprintf(stderr, "%s in %s\n", text, yytext);
+    fprintf(stderr, "%s is %s in %d\n", text, yytext, yylineno);
     return 1;
 }
 %}
@@ -21,10 +21,7 @@ statements              : statements statement
                         | statement
                         ;
 
-statement               : threshold thresholds NL
-                        {
-                            printf("%s\n", $1);
-                        }
+statement               : thresholds NL
                         ;
 
 thresholds              : thresholds threshold
@@ -32,9 +29,5 @@ thresholds              : thresholds threshold
                         ;
 
 threshold               : _tok_IDENTIFY '=' _tok_NUMBER
-                        {
-                            $$ = strdup($1);
-                            printf("%s\n", $$);
-                        }
                         ;
 %%
