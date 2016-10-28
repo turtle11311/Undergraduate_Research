@@ -1,7 +1,6 @@
 %{
 #include <cstdio>
-extern "C" int yylex();
-char tmp[300];
+#include "tln_parser.hpp"
 %}
 
 %option yylineno
@@ -9,18 +8,16 @@ char tmp[300];
 
 %%
 <COMMENT>{
-    .               ;
-    \n              BEGIN(INITIAL);
-}
+    .                   ;
+    \n                  BEGIN(INITIAL);
 
+}
 <INITIAL>{
-    "#"             BEGIN(COMMENT);
-    .               ECHO;
+    "#"                 BEGIN(COMMENT);
+    \n                  return NL;
+    [[:alnum:]_[]-]+    { yylval.tok_str = strdup(yytext); return _tok_IDENTIFY; }
+    [+-]?[[:digit:]]+   { sscanf(yytext, "%d", &yylval.num); return _tok_NUMBER; }
+    [[:blank:]]+        ;
+    .                   return *yytext;
 }
 %%
-int main(int argc,const char* argv[]) {
-    for (int i = 0; i < 7; ++i) {
-        fgets(tmp, 299, stdin);
-    }
-    yylex();
-}

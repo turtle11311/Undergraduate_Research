@@ -1,5 +1,3 @@
 tln/
-*.cpp
-*.hpp
-*.o
+build/
 threshold_logic_merger
