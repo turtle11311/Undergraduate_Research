@@ -6,7 +6,7 @@ YACC = bison
 LDFLAGS += -lfl
 VPATH = src:build
 BUILDDIR = build
-TARGET = threshold_logic_merger
+TARGET = tln_merger
 
 .PHONY: all clean
 
