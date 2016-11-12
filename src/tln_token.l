@@ -1,5 +1,6 @@
 %{
 #include <cstdio>
+#include "Gate.hpp"
 #include "tln_parser.hpp"
 %}
 

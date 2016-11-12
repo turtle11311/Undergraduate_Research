@@ -15,7 +15,7 @@ all: $(BUILDDIR) $(TARGET)
 $(BUILDDIR)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) $< $(LDFLAGS) -c -o $@
 
-$(TARGET): $(BUILDDIR)/main.o $(BUILDDIR)/tln_scanner.o $(BUILDDIR)/tln_parser.o
+$(TARGET): $(BUILDDIR)/main.o $(BUILDDIR)/tln_scanner.o $(BUILDDIR)/tln_parser.o $(BUILDDIR)/ThresholdNetwork.o $(BUILDDIR)/Gate.o
 	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
 $(BUILDDIR)/tln_scanner.cpp: tln_token.l tln_parser.cpp
