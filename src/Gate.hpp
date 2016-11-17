@@ -9,7 +9,7 @@
  */
 #pragma once
 #include <string>
-#include <list>
+#include <vector>
 #include <tuple>
 #include <utility>
 class Gate;
@@ -44,11 +44,13 @@ public:
      * \fn void addInput(Gate* input, int thresholdVal)
      * \param input pointer to input gate
      * \param thresholdVal threshold value for this input
+     * \param phase this input have inverter?
      * \brief Add input gate
      */
-    void addInput(Gate* input, int thresholdVal);
-    std::string name;                   /*!< Name of the gate */
-    std::list<ThresholdInput> fan_in;   /*!< List of gate's inputs */
-    std::list<Gate*> fan_out;           /*!< List of gate's outputs */
+    void addInput(Gate* input, int thresholdVal, bool phase);
+    int thresholdVal;                       /*!< threshold value of this gate */
+    std::string name;                       /*!< Name of the gate */
+    std::vector<ThresholdInput> fan_in;     /*!< List of gate's inputs */
+    std::vector<Gate*> fan_out;             /*!< List of gate's outputs */
 
 };

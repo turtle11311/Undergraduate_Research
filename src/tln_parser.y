@@ -1,9 +1,11 @@
 %{
 #include <cstdio>
+#include <iostream>
 #include <cstring>
 #include <vector>
+#include <algorithm>
 #include "ThresholdNetwork.hpp"
-ThresholdNetwork network;
+extern ThresholdNetwork network;
 
 std::vector<GateAttr> inputGates;
 extern int yylex(void);
@@ -34,10 +36,21 @@ statements              : statements statement
 statement               : threshold thresholds NL
                         {
                             Gate* curGate = network.accessGateByName($1.name);
+                            curGate->thresholdVal = $1.thresholdVal;
+                            // sort fan_in sequence by threshold value from large to small
                             for (GateAttr &attr : inputGates) {
                                 Gate* inputGate = network.accessGateByName(attr.name);
-                                curGate->addInput(inputGate, attr.thresholdVal);
+                                if (attr.thresholdVal > 0) {
+                                    curGate->addInput(inputGate, attr.thresholdVal, false);
+                                } else {
+                                    curGate->thresholdVal -= attr.thresholdVal;
+                                    curGate->addInput(inputGate, -attr.thresholdVal, true);
+                                }
                             }
+                            std::sort(curGate->fan_in.begin(), curGate->fan_in.end(),
+                                [](const ThresholdInput &a, const ThresholdInput &b) {
+                                    return std::get<1>(a) > std::get<1>(b);
+                            });
                             inputGates.clear();
                         }
                         ;

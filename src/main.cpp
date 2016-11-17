@@ -2,7 +2,7 @@
 #include "ThresholdNetwork.hpp"
 extern int yyparse(void);
 extern int yylineno;
-extern ThresholdNetwork network;
+ThresholdNetwork network;
 
 int main(int argc, char const *argv[]) {
     char tmp[300];

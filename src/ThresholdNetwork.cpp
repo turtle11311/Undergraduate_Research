@@ -12,12 +12,14 @@ Gate* ThresholdNetwork::accessGateByName(const char *const name)
 void ThresholdNetwork::_Debug_Wiring()
 {
     for (auto& gate : gatePool) {
-        std::cout << "Name: " << gate.first << std::endl;
+        if (!gate.second->fan_in.size())
+            continue;
+        std::cout << "Name: " << gate.first << "-> " << gate.second->thresholdVal << std::endl;
         std::cout << "FANIN: " << std::endl;
         for (auto& fanin : gate.second->fan_in) {
-            std::cout << std::get<0>(fanin)->name << ", ";
+            std::cout << std::get<0>(fanin)->name << ": "
+                      << std::get<1>(fanin) << std::endl;
         }
-        std::cout << std::endl;
         std::cout << "FANOUT: " << std::endl;
         for (auto& fanout : gate.second->fan_out) {
             std::cout << fanout->name << ", ";
