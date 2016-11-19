@@ -1,5 +1,6 @@
 #include "ThresholdNetwork.hpp"
 #include <iostream>
+#include <numeric>
 using std::cout;
 using std::endl;
 
@@ -11,26 +12,19 @@ Gate* ThresholdNetwork::accessGateByName(const char *const name)
     return nowGate;
 }
 
-void ThresholdNetwork::findCEVs(){
+void ThresholdNetwork::findCEVs()
+{
     std::vector<int> initialVec;
-    for (auto& gate : gatePool){
-            if ( gate.second->fan_in.size() == 0 ) continue;
-            initialVec.resize(gate.second->fan_in.size());
-            int uncheckedSum = 0;
-            for ( int i = 0 ; i < initialVec.size() ; ++ i ){
-                initialVec[i] = 0;
-                uncheckedSum += std::get<1>(gate.second->fan_in[i]);
+    for (auto& gate : gatePool) {
+        if (gate.second->fan_in.size() == 0) continue;
+        initialVec.assign(gate.second->fan_in.size(), 0);
+        int uncheckedSum =
+            std::accumulate(gate.second->fan_in.begin(), gate.second->fan_in.end(), 0,
+            [](int sum, const ThresholdInput &thg) {
+                return std::get<1>(thg) + sum;
             }
-            gate.second->onsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
-            //gate.second->_Debug_Gate_Information();
-            //cout << "Onset table size: " << gate.second->onsetTable.size() << endl;
-            //for ( int i = 0 ; i < gate.second->onsetTable.size() ; ++i ){
-            //    cout << "【 ";
-            //    for ( int j = 0 ; j < gate.second->onsetTable[i].size() ; j ++ )
-            //    cout << gate.second->onsetTable[i][j] << " ";
-            //    cout << " 】, ";
-            //}
-            //cout << endl;
+        );
+        gate.second->onsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
     }
 }
 
