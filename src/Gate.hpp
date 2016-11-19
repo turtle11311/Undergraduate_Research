@@ -1,12 +1,12 @@
 /*!
- * @file
- *
- * @Author TurtleBee <turtle11311@gmail.com>
- * @Author Yaimaoz <ny8859884@gmail.com>
- * @section DESCRIPTION
- *
- * The class for threshold gate
- */
+* @file
+*
+* @Author TurtleBee <turtle11311@gmail.com>
+* @Author Yaimaoz <ny8859884@gmail.com>
+* @section DESCRIPTION
+*
+* The class for threshold gate
+*/
 #pragma once
 #include <string>
 #include <vector>
@@ -14,43 +14,68 @@
 #include <utility>
 class Gate;
 /*!
- * \typedef std::pair<Gate*, int> ThresholdInput
- * First is Gate's pointer, and second is its threshold value
- */
+* \typedef std::pair<Gate*, int> ThresholdInput
+* First is Gate's pointer, and second is its threshold value
+*/
 typedef std::tuple<Gate*, int, bool> ThresholdInput;
+/*!
+* \typedef std::vector<std::vector<int>> PatternTable
+* Storage of onset/offset critical effect vectors
+*/
+typedef std::vector<std::vector<int>> PatternTable;
 
 /*!
- * \struct GateAttr Gate.hpp
- * \brief The class for threshold gate in parsing
- */
+* \struct GateAttr Gate.hpp
+* \brief The class for threshold gate in parsing
+*/
 struct GateAttr{
     char* name;
     int thresholdVal;
 };
 
 /*!
- * \class Gate Gate.hpp
- * \brief The class for threshold gate
- */
+* \class Gate Gate.hpp
+* \brief The class for threshold gate
+*/
 class Gate {
 public:
     /*!
-     * \fn Gate(const char* const name = "")
-     * \param name name for new gate
-     * \brief Constructor of Gate
-     */
+    * \fn Gate(const char* const name = "")
+    * \param name name for new gate
+    * \brief Constructor of Gate
+    */
     Gate(const char* const name = "");
     /*!
-     * \fn void addInput(Gate* input, int thresholdVal)
-     * \param input pointer to input gate
-     * \param thresholdVal threshold value for this input
-     * \param phase this input have inverter?
-     * \brief Add input gate
-     */
+    * \fn void addInput(Gate* input, int thresholdVal)
+    * \param input pointer to input gate
+    * \param thresholdVal threshold value for this input
+    * \param phase this input have inverter?
+    * \brief Add input gate
+    */
     void addInput(Gate* input, int thresholdVal, bool phase);
-    int thresholdVal;                       /*!< threshold value of this gate */
+    /*!
+    * \fn void onsetCriticalEffectVector(std::vector<int> curPattern, int pos, int uncheckedSum)
+    * \param current fan_in pattern
+    * \param the check bit
+    * \param current checked bits' weight sum
+    * \param the unchecked bits' weight sum
+    * \brief a recursive function to find all the "Onset Critical Effect Vector"
+    */
+    void onsetCriticalEffectVector(std::vector<int> curPattern, int pos, int curWeightSum, int uncheckedSum);
+    /*!
+    * \fn void offsetCriticalEffectVector(std::vector<int> curPattern, int pos, int uncheckedSum)
+    * \param current fan_in pattern
+    * \param the check bit
+    * \param current checked bits' weight sum
+    * \param the unchecked bits' weight sum
+    * \brief a recursive function to find all the "Offset Critical Effect Vector"
+    */
+    void offsetCriticalEffectVector(std::vector<int> curPattern, int pos, int curWeightSum, int uncheckedSum);
+    void _Debug_Gate_Information();
+    int thresholdVal;                       /*!< Threshold value of this gate */
     std::string name;                       /*!< Name of the gate */
     std::vector<ThresholdInput> fan_in;     /*!< List of gate's inputs */
     std::vector<Gate*> fan_out;             /*!< List of gate's outputs */
-
+    PatternTable onsetTable;                /*!< Vector of vector of all the onset vectors*/
+    PatternTable offsetTable;               /*!< Vector of vector of all the offset vectors*/
 };

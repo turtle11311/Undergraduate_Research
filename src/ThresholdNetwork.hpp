@@ -32,7 +32,13 @@ public:
      * or it don't exist, then create this gate and return the pointer to it
      */
     Gate* accessGateByName(const char* const name);
+    /*!
+     * \fn findCEVs(void)
+     * \brief find all the onset/offset critical effect vectors
+     */
+    void findCEVs(void);
     void _Debug_Wiring();
+    void _Debug_Onset_Critical_Effect_Vector();
     /*!
      * \fn ~ThresholdNetwork()
      * \brief Destructor of this class
