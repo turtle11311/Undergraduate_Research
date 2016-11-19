@@ -25,6 +25,8 @@ void ThresholdNetwork::findCEVs()
             }
         );
         gate.second->onsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
+        initialVec.assign(gate.second->fan_in.size(), 1);
+        gate.second->offsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
     }
 }
 
@@ -54,6 +56,14 @@ void ThresholdNetwork::_Debug_Onset_Critical_Effect_Vector(){
             cout << "【 ";
             for ( int j = 0 ; j < gate.second->onsetTable[i].size() ; j ++ )
             cout << gate.second->onsetTable[i][j] << " ";
+            cout << " 】, ";
+        }
+        cout << endl;
+        cout << "Offset table size: " << gate.second->offsetTable.size() << endl;
+        for ( int i = 0 ; i < gate.second->offsetTable.size() ; ++i ){
+            cout << "【 ";
+            for ( int j = 0 ; j < gate.second->offsetTable[i].size() ; j ++ )
+            cout << gate.second->offsetTable[i][j] << " ";
             cout << " 】, ";
         }
         cout << endl;

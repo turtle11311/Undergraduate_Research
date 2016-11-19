@@ -15,9 +15,7 @@ void Gate::addInput(Gate *input, int thresholdVal, bool phase)
 
 void Gate::onsetCriticalEffectVector(std::vector<int> curPattern, int pos, int curWeightSum, int uncheckedSum) {
     if ( pos == curPattern.size() ) return;
-
     if ( uncheckedSum < thresholdVal - curWeightSum ) return;
-
     int checkBitWeight = std::get<1>(fan_in[pos]);
     onsetCriticalEffectVector( curPattern, pos + 1, curWeightSum, uncheckedSum - checkBitWeight );
     curWeightSum += checkBitWeight;
@@ -26,6 +24,20 @@ void Gate::onsetCriticalEffectVector(std::vector<int> curPattern, int pos, int c
         onsetTable.push_back(curPattern);
     else
         onsetCriticalEffectVector( curPattern, pos + 1, curWeightSum, uncheckedSum - checkBitWeight );
+}
+
+void Gate::offsetCriticalEffectVector(std::vector<int> curPattern, int pos, int curWeightSum, int uncheckedSum){
+    if ( pos == curPattern.size() ) return;
+    if ( curWeightSum >= thresholdVal ) return;
+    int checkBitWeight = std::get<1>(fan_in[pos]);
+    curWeightSum += checkBitWeight;
+    offsetCriticalEffectVector( curPattern, pos + 1, curWeightSum, uncheckedSum - checkBitWeight );
+    curPattern[pos] = 0;
+    curWeightSum -= checkBitWeight;
+    if ( uncheckedSum + curWeightSum - checkBitWeight < thresholdVal )
+        offsetTable.push_back(curPattern);
+    else
+        offsetCriticalEffectVector( curPattern, pos + 1, curWeightSum, uncheckedSum - checkBitWeight );
 }
 
 void Gate::_Debug_Gate_Information(){
