@@ -15,7 +15,6 @@
  * A storage support quick query by the name
  */
 typedef std::map<std::string, Gate*> GateDict;
-
 /*!
  * \class ThresholdNetwork ThresholdNetwork.hpp
  * \brief The class for threshold gate network
@@ -23,6 +22,8 @@ typedef std::map<std::string, Gate*> GateDict;
 class ThresholdNetwork {
 private:
     GateDict gatePool;                      /*!< Dictonary for gate */
+    Gate start;                             /*!< pseudo gate for all pi's fanin*/
+    Gate end;                               /*!< pseudo gate for all po's fanout*/
 public:
     /*!
      * \fn Gate* accessGateByName(const char* const name)
@@ -32,6 +33,11 @@ public:
      * or it don't exist, then create this gate and return the pointer to it
      */
     Gate* accessGateByName(const char* const name);
+    /*!
+     * \fn gateClassify(void)
+     * \brief classify all the gate
+     */
+    void gateClassify();
     /*!
      * \fn findCEVs(void)
      * \brief find all the onset/offset critical effect vectors

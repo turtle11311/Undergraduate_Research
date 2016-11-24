@@ -11,7 +11,8 @@ int main(int argc, char const *argv[]) {
         ++yylineno;
     }
     yyparse();
-    network.findCEVs();
-    network._Debug_Onset_Critical_Effect_Vector();
+    network.gateClassify();
+    //network.findCEVs();
+    //network._Debug_Onset_Critical_Effect_Vector();
     return 0;
 }

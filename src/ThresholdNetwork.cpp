@@ -48,7 +48,7 @@ void ThresholdNetwork::_Debug_Wiring()
 }
 
 void ThresholdNetwork::_Debug_Onset_Critical_Effect_Vector(){
-    for ( auto gate : gatePool ){
+    for ( auto& gate : gatePool ){
         gate.second->_Debug_Gate_Information();
         if ( gate.second->fan_in.size() == 0 ) continue;
         cout << "Onset table size: " << gate.second->onsetTable.size() << endl;
@@ -67,6 +67,23 @@ void ThresholdNetwork::_Debug_Onset_Critical_Effect_Vector(){
             cout << " 】, ";
         }
         cout << endl;
+    }
+}
+
+void ThresholdNetwork::gateClassify(){
+    for ( auto& gate : gatePool ){
+        if ( gate.second->fan_in.size() == 0 && gate.second->fan_out.size() == 0 )
+            gate.second->type = Constant;
+        else if ( gate.second->fan_in.size() == 0 ){
+            gate.second->type = Pi;
+            start.fan_out.push_back(gate.second);
+        }
+        else if ( gate.second->fan_out.size() == 0 ){
+            gate.second->type = Po;
+            end.fan_in.push_back(ThresholdInput{gate.second,1,0});
+        }
+        else
+            gate.second->type = Internal;
     }
 }
 

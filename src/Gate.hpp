@@ -13,6 +13,15 @@
 #include <tuple>
 #include <utility>
 class Gate;
+
+/*!
+* \enum gate type
+* First(0) Constant mean the gate has no fanin & fanout
+* Second(1) Pi mean the gate has no fanin
+* Third(2) Po mean the gate has no fanout
+* Forth(3) Internal mean the gate has both fanin & fanout
+*/
+enum GateType { Constant, Pi , Po, Internal };
 /*!
 * \typedef std::pair<Gate*, int> ThresholdInput
 * First is Gate's pointer, and second is its threshold value
@@ -23,7 +32,6 @@ typedef std::tuple<Gate*, int, bool> ThresholdInput;
 * Storage of onset/offset critical effect vectors
 */
 typedef std::vector<std::vector<int>> PatternTable;
-
 /*!
 * \struct GateAttr Gate.hpp
 * \brief The class for threshold gate in parsing
@@ -32,7 +40,6 @@ struct GateAttr{
     char* name;
     int thresholdVal;
 };
-
 /*!
 * \class Gate Gate.hpp
 * \brief The class for threshold gate
@@ -73,6 +80,7 @@ public:
     void offsetCriticalEffectVector(std::vector<int> curPattern, int pos, int curWeightSum, int uncheckedSum);
     void _Debug_Gate_Information();
     int thresholdVal;                       /*!< Threshold value of this gate */
+    GateType type;                          /*!< Type of the gate*/
     std::string name;                       /*!< Name of the gate */
     std::vector<ThresholdInput> fan_in;     /*!< List of gate's inputs */
     std::vector<Gate*> fan_out;             /*!< List of gate's outputs */
