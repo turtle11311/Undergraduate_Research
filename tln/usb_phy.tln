@@ -3,9 +3,6 @@
 >Process usb_phy
 =======================================
 AND nodes =    357.  Estimate =    769.
-n0_DFFX1_10 can be removed
-    n254 (158) = 1: fo 1: n0_DFFSRX1_431 (111) = 3 P>1,      rst (2) = 2 P>1,     n235 (137) = 2 P>0,     n239 (141) = 2 P>0, 
-  fo:     n258, 
 # TLN description starts
         usb_rst =   0  n0_DFFSRX1_226 =   0
            txdp =   0    n0_DFFX1_181 =   0

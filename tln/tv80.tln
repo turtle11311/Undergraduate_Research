@@ -3,12 +3,6 @@
 >Process tv80
 =======================================
 AND nodes =   7233.  Estimate =  14647.
-n0_DFFX1_934 can be removed
-n0_DFFX1_799 can be removed
-n0_DFFX1_935 can be removed
-n0_DFFX1_918 can be removed
-   n1004 (645) = 1: fo 2: n0_DFFX1_1018 (238) = 9 P>0, 
-  fo:    n1006,    n1007, 
 # TLN description starts
            m1_n =   0    n0_DFFX1_788 =   0
          mreq_n =   0   n0_DFFX1_2208 =   0
