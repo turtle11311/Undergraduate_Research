@@ -12,6 +12,7 @@
 #include <vector>
 #include <tuple>
 #include <utility>
+#include <set>
 class Gate;
 
 /*!
@@ -21,7 +22,7 @@ class Gate;
 * Third(2) Po mean the gate has no fanout
 * Forth(3) Internal mean the gate has both fanin & fanout
 */
-enum GateType { Constant, Pi , Po, Internal };
+enum GateType { Constant, PI, PO, Internal };
 /*!
 * \typedef std::pair<Gate*, int> ThresholdInput
 * First is Gate's pointer, and second is its threshold value
@@ -86,4 +87,5 @@ public:
     std::vector<Gate*> fan_out;             /*!< List of gate's outputs */
     PatternTable onsetTable;                /*!< Vector of vector of all the onset vectors*/
     PatternTable offsetTable;               /*!< Vector of vector of all the offset vectors*/
+    std::set<Gate*> dominators;             /*!< A set of this gate's dominators */
 };

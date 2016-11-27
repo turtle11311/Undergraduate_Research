@@ -12,6 +12,7 @@ int main(int argc, char const *argv[]) {
     }
     yyparse();
     network.gateClassify();
+    network.findAllDominator();
     //network.findCEVs();
     //network._Debug_Onset_Critical_Effect_Vector();
     return 0;

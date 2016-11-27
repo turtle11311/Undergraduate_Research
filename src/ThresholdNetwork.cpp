@@ -1,6 +1,10 @@
 #include "ThresholdNetwork.hpp"
 #include <iostream>
 #include <numeric>
+#include <algorithm>
+#include <iterator>
+#include <functional>
+
 using std::cout;
 using std::endl;
 
@@ -27,6 +31,38 @@ void ThresholdNetwork::findCEVs()
         gate.second->onsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
         initialVec.assign(gate.second->fan_in.size(), 1);
         gate.second->offsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
+    }
+}
+
+void ThresholdNetwork::findAllDominator()
+{
+    /*!
+     * \fn dominator(Gate* gate)
+     * \brief find this gate dominators
+     * \param gate the gate, that you want to find its dominator
+     */
+    std::function<std::set<Gate*>*(Gate*)> dominator = [=, &dominator](Gate* gate) -> std::set<Gate*>*
+    {
+        if (!gate->dominators.empty() || gate->type == PO) {
+            return &gate->dominators;
+        }
+        std::set<Gate*> intersection(*dominator(gate->fan_out.front()));
+        std::set<Gate*> tmpSet;
+        for (auto it = ++gate->fan_out.begin(); it != gate->fan_out.end(); ++it) {
+            auto itDominator = dominator(*it);
+            tmpSet.clear();
+            std::set_intersection(itDominator->begin(), itDominator->end(),
+            intersection.begin(), intersection.end(),
+            std::inserter(tmpSet, tmpSet.begin()));
+            intersection = tmpSet;
+        }
+        intersection.insert(gate);
+        gate->dominators = intersection;
+        return &gate->dominators;
+    };
+
+    for (Gate* PI : start.fan_out) {
+        dominator(PI);
     }
 }
 
@@ -75,11 +111,11 @@ void ThresholdNetwork::gateClassify(){
         if ( gate.second->fan_in.size() == 0 && gate.second->fan_out.size() == 0 )
             gate.second->type = Constant;
         else if ( gate.second->fan_in.size() == 0 ){
-            gate.second->type = Pi;
+            gate.second->type = PI;
             start.fan_out.push_back(gate.second);
         }
         else if ( gate.second->fan_out.size() == 0 ){
-            gate.second->type = Po;
+            gate.second->type = PO;
             end.fan_in.push_back(ThresholdInput{gate.second,1,0});
         }
         else

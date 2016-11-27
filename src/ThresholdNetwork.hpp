@@ -39,10 +39,15 @@ public:
      */
     void gateClassify();
     /*!
-     * \fn findCEVs(void)
+     * \fn findCEVs()
      * \brief find all the onset/offset critical effect vectors
      */
-    void findCEVs(void);
+    void findCEVs();
+    /*!
+     * \fn findAllDominator()
+     * \brief find all gate's dominator
+     */
+    void findAllDominator();
     void _Debug_Wiring();
     void _Debug_Onset_Critical_Effect_Vector();
     /*!
