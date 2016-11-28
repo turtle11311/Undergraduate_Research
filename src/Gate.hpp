@@ -79,7 +79,25 @@ public:
     * \brief a recursive function to find all the "Offset Critical Effect Vector"
     */
     void offsetCriticalEffectVector(std::vector<int> curPattern, int pos, int curWeightSum, int uncheckedSum);
+    /*!
+     * \fn evalDominators()
+     * \brief evaluate dominators of this gate
+     */
+    std::set<Gate*>* evalDominators();
+    /*!
+     * \fn evalFanoutCone()
+     * \brief evaluate fanoutCone of this gate
+     */
     std::set<Gate*>* evalFanoutCone();
+    /*!
+     * \fn evalCriticalEffectVectors()
+     * \brief evaluate critical effect vectors of this gate
+     */
+    void evalCriticalEffectVectors();
+    /*!
+     * \fn evalSideInput()
+     * \brief evaluate side inputs of this gate
+     */
     void evalSideInput();
     void _Debug_Gate_Information();
     int thresholdVal;                       /*!< Threshold value of this gate */
@@ -91,5 +109,5 @@ public:
     PatternTable offsetTable;               /*!< Vector of vector of all the offset vectors*/
     std::set<Gate*> dominators;             /*!< A set of this gate's dominators */
     std::set<Gate*> fanoutCone;             /*!< A set of this gate's fanoutCone */
-    std::set<Gate*> sideInputs;              /*!< A set of this gate's sideinputs */
+    std::set<Gate*> sideInputs;             /*!< A set of this gate's sideinputs */
 };

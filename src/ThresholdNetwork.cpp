@@ -16,68 +16,15 @@ Gate* ThresholdNetwork::accessGateByName(const char *const name)
     return nowGate;
 }
 
-void ThresholdNetwork::findCEVs()
-{
-    std::vector<int> initialVec;
-    for (auto& gate : gatePool) {
-        if (gate.second->fan_in.size() == 0) continue;
-        initialVec.assign(gate.second->fan_in.size(), 0);
-        int uncheckedSum =
-            std::accumulate(gate.second->fan_in.begin(), gate.second->fan_in.end(), 0,
-            [](int sum, const ThresholdInput &thg) {
-                return std::get<1>(thg) + sum;
-            }
-        );
-        gate.second->onsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
-        initialVec.assign(gate.second->fan_in.size(), 1);
-        gate.second->offsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
-    }
-}
-
-void ThresholdNetwork::findAllDominator()
-{
-    /*!
-     * \fn dominator(Gate* gate)
-     * \brief find this gate dominators
-     * \param gate the gate, that you want to find its dominator
-     */
-    std::function<std::set<Gate*>*(Gate*)> dominator = [=, &dominator](Gate* gate) -> std::set<Gate*>*
-    {
-        if (!gate->dominators.empty() || gate->type == PO) {
-            return &gate->dominators;
-        }
-        std::set<Gate*> intersection(*dominator(gate->fan_out.front()));
-        std::set<Gate*> tmpSet;
-        for (auto it = ++gate->fan_out.begin(); it != gate->fan_out.end(); ++it) {
-            auto itDominator = dominator(*it);
-            tmpSet.clear();
-            std::set_intersection(itDominator->begin(), itDominator->end(),
-            intersection.begin(), intersection.end(),
-            std::inserter(tmpSet, tmpSet.begin()));
-            intersection = tmpSet;
-        }
-        intersection.insert(gate);
-        gate->dominators = intersection;
-        return &gate->dominators;
-    };
-
-    for (Gate* PI : start.fan_out) {
-        dominator(PI);
-    }
-}
-
 void ThresholdNetwork::foreachGateAttr()
 {
-    for (auto &gate : start.fan_out) {
+    for (Gate* gate : start.fan_out) {
+        gate->evalDominators();
         gate->evalFanoutCone();
     }
     for (auto &gate : gatePool) {
         gate.second->evalSideInput();
-        cout << gate.first << " SideInput: " << endl;
-        for (Gate* side : gate.second->sideInputs) {
-            cout << side->name << ", ";
-        }
-        cout << endl;
+        gate.second->evalCriticalEffectVectors();
     }
 }
 

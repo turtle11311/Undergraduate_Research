@@ -34,20 +34,15 @@ public:
      */
     Gate* accessGateByName(const char* const name);
     /*!
-     * \fn gateClassify(void)
+     * \fn gateClassify()
      * \brief classify all the gate
      */
     void gateClassify();
     /*!
-     * \fn findCEVs()
-     * \brief find all the onset/offset critical effect vectors
+     * \fn foreachGateAttr()
+     * \brief generate essentail attribute for logic sythesis
+     * evaluate dominators, CEVs, FanoutCone and side inputs for each gates in this network
      */
-    void findCEVs();
-    /*!
-     * \fn findAllDominator()
-     * \brief find all gate's dominator
-     */
-    void findAllDominator();
     void foreachGateAttr();
     void _Debug_Wiring();
     void _Debug_Onset_Critical_Effect_Vector();

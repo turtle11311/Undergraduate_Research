@@ -42,6 +42,42 @@ void Gate::offsetCriticalEffectVector(std::vector<int> curPattern, int pos, int 
         offsetCriticalEffectVector( curPattern, pos + 1, curWeightSum, uncheckedSum - checkBitWeight );
 }
 
+void Gate::evalCriticalEffectVectors()
+{
+    std::vector<int> initialVec;
+    if (fan_in.size() == 0) return;
+    initialVec.assign(fan_in.size(), 0);
+    int uncheckedSum =
+        std::accumulate(fan_in.begin(), fan_in.end(), 0,
+            [](int sum, const ThresholdInput &thg) {
+                    return std::get<1>(thg) + sum;
+            }
+        );
+    onsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
+    initialVec.assign(fan_in.size(), 1);
+    offsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
+}
+
+std::set<Gate*>* Gate::evalDominators()
+{
+    if (!dominators.empty() || type == PO) {
+        return &dominators;
+    }
+    std::set<Gate*> intersection(*fan_out.front()->evalDominators());
+    std::set<Gate*> tmpSet;
+    for (auto it = ++fan_out.begin(); it != fan_out.end(); ++it) {
+        auto itDominator = (*it)->evalDominators();
+        tmpSet.clear();
+        std::set_intersection(itDominator->begin(), itDominator->end(),
+        intersection.begin(), intersection.end(),
+        std::inserter(tmpSet, tmpSet.begin()));
+        intersection = tmpSet;
+    }
+    intersection.insert(this);
+    dominators = intersection;
+    return &dominators;
+}
+
 std::set<Gate*>* Gate::evalFanoutCone()
 {
     if (!fanoutCone.empty() || type == PO) {
@@ -72,6 +108,11 @@ void Gate::evalSideInput()
                 sideInputs.insert(ptr);
             }
         }
+    }
+    // purge its fan_in
+    for (auto& gate : fan_in) {
+        Gate *ptr = get<0>(gate);
+        sideInputs.erase(ptr);
     }
 }
 
