@@ -66,6 +66,21 @@ void ThresholdNetwork::findAllDominator()
     }
 }
 
+void ThresholdNetwork::foreachGateAttr()
+{
+    for (auto &gate : start.fan_out) {
+        gate->evalFanoutCone();
+    }
+    for (auto &gate : gatePool) {
+        gate.second->evalSideInput();
+        cout << gate.first << " SideInput: " << endl;
+        for (Gate* side : gate.second->sideInputs) {
+            cout << side->name << ", ";
+        }
+        cout << endl;
+    }
+}
+
 void ThresholdNetwork::_Debug_Wiring()
 {
     for (auto& gate : gatePool) {

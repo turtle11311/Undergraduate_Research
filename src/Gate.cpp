@@ -1,7 +1,9 @@
 #include "Gate.hpp"
 #include <iostream>
+#include <algorithm>
 using std::cout;
 using std::endl;
+using std::get;
 
 Gate::Gate(const char* const name)
     : name(name)
@@ -38,6 +40,39 @@ void Gate::offsetCriticalEffectVector(std::vector<int> curPattern, int pos, int 
         offsetTable.push_back(curPattern);
     else
         offsetCriticalEffectVector( curPattern, pos + 1, curWeightSum, uncheckedSum - checkBitWeight );
+}
+
+std::set<Gate*>* Gate::evalFanoutCone()
+{
+    if (!fanoutCone.empty() || type == PO) {
+        return &fanoutCone;
+    }
+
+    std::set<Gate*> _union(*fan_out.front()->evalFanoutCone());
+    std::set<Gate*> tmpSet;
+    for (auto it = ++fan_out.begin(); it != fan_out.end(); ++it) {
+        auto itFanoutCone = (*it)->evalFanoutCone();
+        tmpSet.clear();
+        std::set_union(itFanoutCone->begin(), itFanoutCone->end(),
+                       _union.begin(), _union.end(),
+                       std::inserter(tmpSet, tmpSet.begin()));
+        _union = tmpSet;
+    }
+    _union.insert(this);
+    fanoutCone = _union;
+    return &fanoutCone;
+}
+
+void Gate::evalSideInput()
+{
+    for (Gate* dominator : dominators) {
+        for (auto &fanin : dominator->fan_in) {
+            Gate* ptr = get<0>(fanin);
+            if (fanoutCone.find(ptr) == fanoutCone.end()) {
+                sideInputs.insert(ptr);
+            }
+        }
+    }
 }
 
 void Gate::_Debug_Gate_Information(){

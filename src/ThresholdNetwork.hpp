@@ -48,6 +48,7 @@ public:
      * \brief find all gate's dominator
      */
     void findAllDominator();
+    void foreachGateAttr();
     void _Debug_Wiring();
     void _Debug_Onset_Critical_Effect_Vector();
     /*!
