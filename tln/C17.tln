@@ -1,0 +1,13 @@
+
+=======================================
+>Process C17
+=======================================
+AND nodes =      6.  Estimate =     14.
+# TLN description starts
+            n10 =   1         2GAT(1) =   2         3GAT(2) =  -1         6GAT(3) =  -1
+            n11 =   2             n10 =   2         1GAT(0) =   1         3GAT(2) =   1
+      22GAT(10) =   0             n11 =   0
+            n13 =   1             n10 =   3         7GAT(4) =   2         3GAT(2) =  -1         6GAT(3) =  -1
+       23GAT(9) =   0             n13 =   0
+# Total Weight + ThValue 19
+# Total Node Count 3
