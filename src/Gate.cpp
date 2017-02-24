@@ -116,7 +116,6 @@ void Gate::evalSideInput()
     }
 }
 
-<<<<<<< HEAD
 void Gate::checkContollingValueState( int mode ){
     auto& table = mode ? onsetTable : offsetTable;
     for ( unsigned int i = 0 ; i < table.size() ; ++i ){
@@ -144,28 +143,18 @@ void Gate::checkContollingValueState( int mode ){
     }
 }
 
-=======
->>>>>>> f137d287fad30c7764346fefef29d1207d73394f
 void Gate::_Debug_Gate_Information(){
     cout << "Name: " << name << endl;
     cout << "Threshold value: " << thresholdVal << endl;
     cout << "Fanins: " << endl;
-<<<<<<< HEAD
     for ( unsigned int i = 0 ; i < fan_in.size() ; ++i ){
-=======
-    for ( int i = 0 ; i < fan_in.size() ; ++i ){
->>>>>>> f137d287fad30c7764346fefef29d1207d73394f
         cout << "【" << std::get<0>(fan_in[i])->name << " : "
                      << std::get<1>(fan_in[i])
              << "】, ";
     }
     cout << endl;
     cout << "Fanouts: " << endl;
-<<<<<<< HEAD
     for ( unsigned int i = 0 ; i < fan_out.size() ; ++i ){
-=======
-    for ( int i = 0 ; i < fan_out.size() ; ++i ){
->>>>>>> f137d287fad30c7764346fefef29d1207d73394f
         cout << "【" << fan_out[i]->name << "】, ";
     }
     cout << endl;
