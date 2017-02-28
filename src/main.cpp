@@ -1,5 +1,7 @@
 #include <cstdio>
+#include <iostream>
 #include "ThresholdNetwork.hpp"
+#include "ThresholdNetworkDebugger.hpp"
 extern int yyparse(void);
 extern int yylineno;
 ThresholdNetwork network;
@@ -11,7 +13,13 @@ int main(int argc, char const *argv[]) {
         ++yylineno;
     }
     yyparse();
+    std::ios_base::sync_with_stdio(false);      // use for speedup I/O
     network.gateClassify();
     network.foreachGateAttr();
+    network.evalMandatoryAssignments();
+#ifdef DEBUG
+    // ThresholdNetworkDebugger debugger(network);
+    // debugger.listen();
+#endif
     return 0;
 }

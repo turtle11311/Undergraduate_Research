@@ -47,6 +47,21 @@ void ThresholdNetwork::_Debug_Wiring()
     }
 }
 
+
+void ThresholdNetwork::evalMandatoryAssignments()
+{
+    for (auto gate : gatePool) {
+        for (auto sideInput : gate.second->sideInputs) {
+            sideInput->tmpVal = 0;
+            sideInput->forwardImplication();
+            sideInput->backwardImplication();
+            sideInput->tmpVal = 1;
+            sideInput->forwardImplication();
+            sideInput->backwardImplication();
+        }
+    }
+}
+
 void ThresholdNetwork::_Debug_Onset_Critical_Effect_Vector(){
     cout << "!!!!!!!!!!\n";
     for ( auto& gate : gatePool ){
@@ -93,7 +108,6 @@ void ThresholdNetwork::_Debug_Check_The_Sum_Of_The_Number_Of_Side_Inputs(){
     int maximum = 0;
     for ( auto& gate : gatePool ){
         if ( gate.second->type == PI ) continue;
-        //cout << "Gate name: " << gate.first << endl;
         int initialMas = 0;
         cout << gate.second->sideInputs.size() << " : ";
         for ( Gate* si : gate.second->sideInputs ){

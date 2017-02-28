@@ -143,6 +143,14 @@ void Gate::checkContollingValueState( int mode ){
     }
 }
 
+void Gate::forwardImplication()
+{
+}
+
+void Gate::backwardImplication()
+{
+}
+
 void Gate::_Debug_Gate_Information(){
     cout << "Name: " << name << endl;
     cout << "Threshold value: " << thresholdVal << endl;

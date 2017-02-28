@@ -108,6 +108,8 @@ public:
      */
     void checkContollingValueState( int mode );
 
+    void forwardImplication();
+    void backwardImplication();
     void _Debug_Gate_Information();
     int sideInputControllingValCount;                /*!< sum of number of sidInput's controlling Val*/
     int thresholdVal;                       /*!< Threshold value of this gate */
@@ -120,4 +122,5 @@ public:
     std::set<Gate*> dominators;             /*!< A set of this gate's dominators */
     std::set<Gate*> fanoutCone;             /*!< A set of this gate's fanoutCone */
     std::set<Gate*> sideInputs;             /*!< A set of this gate's sideinputs */
+    short tmpVal;                           /*!< A set of this gate's sideinputs */
 };

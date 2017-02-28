@@ -43,6 +43,7 @@ public:
      * \brief generate essentail attribute for logic sythesis
      * evaluate dominators, CEVs, FanoutCone and side inputs for each gates in this network
      */
+    void evalMandatoryAssignments();
     void foreachGateAttr();
     void _Debug_Wiring();
     void _Debug_Onset_Critical_Effect_Vector();
