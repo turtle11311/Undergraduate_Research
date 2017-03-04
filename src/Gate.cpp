@@ -6,7 +6,7 @@ using std::endl;
 using std::get;
 
 Gate::Gate(const char* const name)
-    : name(name)
+    : name(name), value(-1)
 { sideInputControllingValCount = 0;}
 
 void Gate::addInput(Gate *input, int thresholdVal, bool phase)
@@ -145,10 +145,41 @@ void Gate::checkContollingValueState( int mode ){
 
 void Gate::forwardImplication()
 {
+    for (Gate* fanout : fan_out) {
+        if (fanout->value != -1) {
+            for (auto &fanin : fanout->fan_in) {
+                std::get<0>(fanin)->backwardImplication();
+            }
+            continue;
+        }
+        if (std::get<3>(fanout->getInput(this)) == value) {
+            fanout->value = value;
+            fanout->forwardImplication();
+        }
+    }
 }
 
 void Gate::backwardImplication()
 {
+    for (auto &fanin : fan_in) {
+        if (value == 0) {
+            if (std::get<3>(fanin) != -1) {
+                std::get<0>(fanin)->value = 0;
+            }
+        } else if (value == 1) {
+            //  indirect
+        }
+    }
+}
+
+const ThresholdInput& Gate::getInput(const Gate* target)
+{
+    for (const ThresholdInput& input : fan_in) {
+        if (std::get<0>(input) == target) {
+            return input;
+        }
+    }
+    return ThresholdInput{nullptr, -1, -1, -1};
 }
 
 void Gate::_Debug_Gate_Information(){

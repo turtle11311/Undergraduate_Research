@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iterator>
 #include <functional>
+#include <list>
 
 using std::cout;
 using std::endl;
@@ -51,15 +52,37 @@ void ThresholdNetwork::_Debug_Wiring()
 void ThresholdNetwork::evalMandatoryAssignments()
 {
     for (auto gate : gatePool) {
-        for (auto sideInput : gate.second->sideInputs) {
-            sideInput->tmpVal = 0;
-            sideInput->forwardImplication();
-            sideInput->backwardImplication();
-            sideInput->tmpVal = 1;
-            sideInput->forwardImplication();
-            sideInput->backwardImplication();
+        if (!gate.second->sideInputs.empty())
+            targetGateList.push_back(gate.second);
+    }
+    for (Gate* target : targetGateList) {
+        simulateStuckAt(target, 0);
+        // simulateStuckAt(target, 1);
+    }
+}
+
+void ThresholdNetwork::simulateStuckAt(Gate* target, int stuckAt)
+{
+    std::list<Gate*> modifyList;
+    target->value = !stuckAt;
+    for (Gate* sideInput : target->sideInputs) {
+        for (const ThresholdInput &controllingGate : sideInput->fan_in) {
+            if (std::get<3>(controllingGate) != -1) {
+                std::get<0>(controllingGate)->value = !std::get<3>(controllingGate);
+                modifyList.push_back(std::get<0>(controllingGate));
+            }
         }
     }
+    target->forwardImplication();
+    target->backwardImplication();
+    for (Gate* modifyGate : modifyList) {
+        modifyGate->forwardImplication();
+        modifyGate->backwardImplication();
+    }
+    for (Gate* modifyGate : modifyList) {
+        modifyGate->value = -1;
+    }
+    target->value = -1;
 }
 
 void ThresholdNetwork::_Debug_Onset_Critical_Effect_Vector(){
@@ -93,7 +116,6 @@ void ThresholdNetwork::_Debug_Controlling_Value(){
     cout << "func: _Debug_Controlling_Value\n";
     for ( auto& gate : gatePool ){
         if ( gate.second->type == PI ) continue;
-
         cout << "Gate name: " << gate.first << endl;
         cout << "Gate controlling value state: ";
         for ( auto& fanin : gate.second->fan_in ){
@@ -103,21 +125,21 @@ void ThresholdNetwork::_Debug_Controlling_Value(){
     }
 }
 
-void ThresholdNetwork::_Debug_Check_The_Sum_Of_The_Number_Of_Side_Inputs(){
-
-    int maximum = 0;
-    for ( auto& gate : gatePool ){
-        if ( gate.second->type == PI ) continue;
-        int initialMas = 0;
-        cout << gate.second->sideInputs.size() << " : ";
-        for ( Gate* si : gate.second->sideInputs ){
-            initialMas += si->sideInputControllingValCount;
-        }
-        if ( maximum < initialMas )
-            maximum = initialMas;
-        cout << initialMas << endl;
+void ThresholdNetwork::_Debug_Check_The_Sum_Of_The_Number_Of_Side_Inputs()
+{
+    cout << "Information:" << endl;
+    cout << "Gate number:" << gatePool.size() - start.fan_out.size() - end.fan_in.size() << endl;
+    cout << "TargetGate number: " << targetGateList.size() << endl;
+    cout << endl << endl;
+    int max = 0;
+    for (auto gate: targetGateList) {
+        cout << "\tGatename: " << gate->name << endl;
+        cout << "\tSideinput number: " << gate->sideInputs.size() << endl;
+        cout << "\tControlling value number: " << gate->sideInputControllingValCount << endl;
+        max = max < gate->sideInputControllingValCount ? gate->sideInputControllingValCount : max;
     }
-    cout << maximum << endl;
+    cout << "max contolling value number: " << max << endl;
+    cout << endl << endl << endl;
 }
 
 void ThresholdNetwork::gateClassify(){

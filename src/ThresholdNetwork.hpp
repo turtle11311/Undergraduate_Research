@@ -15,15 +15,19 @@
  * A storage support quick query by the name
  */
 typedef std::map<std::string, Gate*> GateDict;
+
+class ThresholdNetworkDebugger;
 /*!
  * \class ThresholdNetwork ThresholdNetwork.hpp
  * \brief The class for threshold gate network
  */
 class ThresholdNetwork {
+    friend class ThresholdNetworkDebugger;
 private:
     GateDict gatePool;                      /*!< Dictonary for gate */
     Gate start;                             /*!< pseudo gate for all pi's fanin*/
     Gate end;                               /*!< pseudo gate for all po's fanout*/
+    std::vector<Gate*> targetGateList;
 public:
     /*!
      * \fn Gate* accessGateByName(const char* const name)
@@ -44,6 +48,7 @@ public:
      * evaluate dominators, CEVs, FanoutCone and side inputs for each gates in this network
      */
     void evalMandatoryAssignments();
+    void simulateStuckAt(Gate* target, int stuckAt);
     void foreachGateAttr();
     void _Debug_Wiring();
     void _Debug_Onset_Critical_Effect_Vector();

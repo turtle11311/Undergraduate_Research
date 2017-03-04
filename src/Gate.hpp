@@ -110,8 +110,9 @@ public:
 
     void forwardImplication();
     void backwardImplication();
+    const ThresholdInput& getInput(const Gate* target);
     void _Debug_Gate_Information();
-    int sideInputControllingValCount;                /*!< sum of number of sidInput's controlling Val*/
+    int sideInputControllingValCount;       /*!< sum of number of sidInput's controlling Val*/
     int thresholdVal;                       /*!< Threshold value of this gate */
     GateType type;                          /*!< Type of the gate*/
     std::string name;                       /*!< Name of the gate */
@@ -122,5 +123,6 @@ public:
     std::set<Gate*> dominators;             /*!< A set of this gate's dominators */
     std::set<Gate*> fanoutCone;             /*!< A set of this gate's fanoutCone */
     std::set<Gate*> sideInputs;             /*!< A set of this gate's sideinputs */
-    short tmpVal;                           /*!< A set of this gate's sideinputs */
+    std::set<Gate*> mandotoryAssignments;   /*!< A set of this gate's mandotoryAssignments */
+    short value;                            /*!< gate value */
 };
