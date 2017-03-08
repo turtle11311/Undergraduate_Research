@@ -20,7 +20,7 @@ void Gate::addInput(Gate *input, int thresholdVal, bool phase)
 void Gate::onsetCriticalEffectVector(std::vector<int> curPattern, unsigned int pos, int curWeightSum, int uncheckedSum) {
     if ( pos == curPattern.size() ) return;
     if ( uncheckedSum < thresholdVal - curWeightSum ) return;
-    int checkBitWeight = std::get<1>(fan_in[pos]);
+    int checkBitWeight = fan_in[pos].weight;
     onsetCriticalEffectVector( curPattern, pos + 1, curWeightSum, uncheckedSum - checkBitWeight );
     curWeightSum += checkBitWeight;
     curPattern[pos] = 1;
@@ -33,7 +33,7 @@ void Gate::onsetCriticalEffectVector(std::vector<int> curPattern, unsigned int p
 void Gate::offsetCriticalEffectVector(std::vector<int> curPattern, unsigned int pos, int curWeightSum, int uncheckedSum){
     if ( pos == curPattern.size() ) return;
     if ( curWeightSum >= thresholdVal ) return;
-    int checkBitWeight = std::get<1>(fan_in[pos]);
+    int checkBitWeight = fan_in[pos].weight;
     curWeightSum += checkBitWeight;
     offsetCriticalEffectVector( curPattern, pos + 1, curWeightSum, uncheckedSum - checkBitWeight );
     curPattern[pos] = 0;
@@ -52,7 +52,7 @@ void Gate::evalCriticalEffectVectors()
     int uncheckedSum =
         std::accumulate(fan_in.begin(), fan_in.end(), 0,
             [](int sum, const ThresholdInput &thg) {
-                    return std::get<1>(thg) + sum;
+                    return thg.weight + sum;
             }
         );
     onsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
@@ -105,7 +105,7 @@ void Gate::evalSideInput()
 {
     for (Gate* dominator : dominators) {
         for (auto &fanin : dominator->fan_in) {
-            Gate* ptr = get<0>(fanin);
+            Gate* ptr = fanin.ptr;
             if (fanoutCone.find(ptr) == fanoutCone.end()) {
                 sideInputs.insert(ptr);
             }
@@ -113,8 +113,7 @@ void Gate::evalSideInput()
     }
     // purge its fan_in
     for (auto& gate : fan_in) {
-        Gate *ptr = get<0>(gate);
-        sideInputs.erase(ptr);
+        sideInputs.erase(gate.ptr);
     }
 }
 
@@ -134,11 +133,11 @@ void Gate::checkContollingValueState( int mode ){
             }
         }
         if ( index != -1 ) {
-            if ( std::get<3>(fan_in[index]) != -1 ) {
-                std::get<3>(fan_in[index]) = 2;
+            if ( fan_in[index].ctrlVal != -1 ) {
+                fan_in[index].ctrlVal = 2;
             }
             else {
-                std::get<3>(fan_in[index]) = mode;
+                fan_in[index].ctrlVal = mode;
             }
             ++sideInputControllingValCount;
         }
@@ -152,7 +151,7 @@ void Gate::forwardImplication()
 			fanout->backwardImplication();
             continue;
         }
-        if (std::get<3>(fanout->getInput(this)) == value) {
+        if (fanout->getInput(this).ctrlVal == value) {
             fanout->value = value;
             fanout->forwardImplication();
         }
@@ -163,9 +162,9 @@ void Gate::backwardImplication()
 {
     for (auto &fanin : fan_in) {
 		if (value == 0) {
-            if (std::get<3>(fanin) != -1) {
-				if (std::get<0>(fanin)->value == -1) {
-					std::get<0>(fanin)->value = 0;
+            if (fanin.ctrlVal != -1) {
+				if (fanin.ptr->value == -1) {
+					fanin.ptr->value = 0;
 				}
 				else {
 					//conflict
@@ -180,11 +179,11 @@ void Gate::backwardImplication()
 const ThresholdInput& Gate::getInput(const Gate* target)
 {
     for (const ThresholdInput& input : fan_in) {
-        if (std::get<0>(input) == target) {
+        if (input.ptr == target) {
             return input;
         }
     }
-    return ThresholdInput{nullptr, -1, -1, -1};
+    return ThresholdInput({nullptr, -1, -1, -1});
 }
 
 void Gate::_Debug_Gate_Information(){
@@ -192,8 +191,8 @@ void Gate::_Debug_Gate_Information(){
     cout << "Threshold value: " << thresholdVal << endl;
     cout << "Fanins: " << endl;
     for ( unsigned int i = 0 ; i < fan_in.size() ; ++i ){
-        cout << "【" << std::get<0>(fan_in[i])->name << " : "
-                     << std::get<1>(fan_in[i])
+        cout << "【" << fan_in[i].ptr->name << " : "
+                     << fan_in[i].weight
              << "】, ";
     }
     cout << endl;

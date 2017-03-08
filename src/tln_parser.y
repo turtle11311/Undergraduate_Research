@@ -49,7 +49,7 @@ statement               : threshold thresholds NL
                             }
                             std::sort(curGate->fan_in.begin(), curGate->fan_in.end(),
                                 [](const ThresholdInput &a, const ThresholdInput &b) {
-                                    return std::get<1>(a) > std::get<1>(b);
+                                    return a.weight > b.weight;
                             });
                             inputGates.clear();
                         }

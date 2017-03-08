@@ -37,8 +37,8 @@ void ThresholdNetwork::_Debug_Wiring()
         std::cout << "Name: " << gate.first << "-> " << gate.second->thresholdVal << std::endl;
         std::cout << "FANIN: " << std::endl;
         for (auto& fanin : gate.second->fan_in) {
-            std::cout << std::get<0>(fanin)->name << ": "
-                      << std::get<1>(fanin) << std::endl;
+            std::cout << fanin.ptr->name << ": "
+                      << fanin.weight << std::endl;
         }
         std::cout << "FANOUT: " << std::endl;
         for (auto& fanout : gate.second->fan_out) {
@@ -67,9 +67,9 @@ void ThresholdNetwork::simulateStuckAt(Gate* target, int stuckAt)
     target->value = !stuckAt;
     for (Gate* sideInput : target->sideInputs) {
         for (const ThresholdInput &controllingGate : sideInput->fan_in) {
-            if (std::get<3>(controllingGate) != -1) {
-                std::get<0>(controllingGate)->value = !std::get<3>(controllingGate);
-                modifyList.push_back(std::get<0>(controllingGate));
+            if (controllingGate.ctrlVal != -1) {
+                controllingGate.ptr->value = !controllingGate.ctrlVal;
+                modifyList.push_back(controllingGate.ptr);
             }
         }
     }
@@ -119,7 +119,7 @@ void ThresholdNetwork::_Debug_Controlling_Value(){
         cout << "Gate name: " << gate.first << endl;
         cout << "Gate controlling value state: ";
         for ( auto& fanin : gate.second->fan_in ){
-            cout << std::get<3>(fanin) << " ";
+            cout << fanin.ctrlVal << " ";
         }
         cout << endl << endl;
     }
@@ -152,7 +152,7 @@ void ThresholdNetwork::gateClassify(){
         }
         else if ( gate.second->fan_out.size() == 0 ){
             gate.second->type = PO;
-            end.fan_in.push_back(ThresholdInput{gate.second,1,0,-1});
+            end.fan_in.push_back(ThresholdInput({gate.second, 1, 0, -1}));
         }
         else
             gate.second->type = Internal;

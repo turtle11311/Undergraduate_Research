@@ -24,17 +24,20 @@ class Gate;
 */
 enum GateType { Constant, PI, PO, Internal };
 /*!
-* \typedef std::pair<Gate*, int> ThresholdInput
-* First is Gate's pointer, and second is its threshold value
-* Third means need to add inverter or not
-* Forth means the controlling value state,[ -1 : 0 : 1 : 2 ]<=> [ None : 0-controlling value : 1-controlling value : Both ]
-*/
-typedef std::tuple<Gate*, int, bool, int> ThresholdInput;
-/*!
 * \typedef std::vector<std::vector<int>> PatternTable
 * Storage of onset/offset critical effect vectors
 */
 typedef std::vector<std::vector<int>> PatternTable;
+/*!
+* \struct ThresholdInput Gate.hpp
+* \breif Threshold gate input
+*/
+struct ThresholdInput {
+    Gate* ptr;
+    int weight;
+    bool inverter;
+    int ctrlVal;
+};
 /*!
 * \struct GateAttr Gate.hpp
 * \brief The class for threshold gate in parsing
