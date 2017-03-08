@@ -1,6 +1,8 @@
 #include "Gate.hpp"
 #include <iostream>
 #include <algorithm>
+#include <numeric>
+#include <iterator>
 using std::cout;
 using std::endl;
 using std::get;
@@ -147,9 +149,7 @@ void Gate::forwardImplication()
 {
     for (Gate* fanout : fan_out) {
         if (fanout->value != -1) {
-            for (auto &fanin : fanout->fan_in) {
-                std::get<0>(fanin)->backwardImplication();
-            }
+			fanout->backwardImplication();
             continue;
         }
         if (std::get<3>(fanout->getInput(this)) == value) {
@@ -162,9 +162,14 @@ void Gate::forwardImplication()
 void Gate::backwardImplication()
 {
     for (auto &fanin : fan_in) {
-        if (value == 0) {
+		if (value == 0) {
             if (std::get<3>(fanin) != -1) {
-                std::get<0>(fanin)->value = 0;
+				if (std::get<0>(fanin)->value == -1) {
+					std::get<0>(fanin)->value = 0;
+				}
+				else {
+					//conflict
+				}
             }
         } else if (value == 1) {
             //  indirect

@@ -25,6 +25,6 @@ $(BUILDDIR)/tln_parser.cpp: tln_parser.y
 	$(YACC) -d $< -o $@
 
 $(BUILDDIR):
-		mkdir $@
+	mkdir $@
 clean:
 	$(RM) -rf $(BUILDDIR)

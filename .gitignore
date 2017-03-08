@@ -3,4 +3,5 @@ tln/
 build/
 docs/
 .vscode/
+.vs/
 tln_merger
