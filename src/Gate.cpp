@@ -144,6 +144,8 @@ void Gate::checkContollingValueState( int mode ){
     }
 }
 
+static const ThresholdInput nullGate({ nullptr, -1, -1, -1 });
+
 const ThresholdInput& Gate::getInput(const Gate* target)
 {
     for (const ThresholdInput& input : fan_in) {
@@ -151,7 +153,7 @@ const ThresholdInput& Gate::getInput(const Gate* target)
             return input;
         }
     }
-    return ThresholdInput({nullptr, -1, -1, -1});
+    return nullGate;
 }
 
 void Gate::_Debug_Gate_Information(){
