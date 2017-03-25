@@ -144,38 +144,6 @@ void Gate::checkContollingValueState( int mode ){
     }
 }
 
-void Gate::forwardImplication()
-{
-    for (Gate* fanout : fan_out) {
-        if (fanout->value != -1) {
-			fanout->backwardImplication();
-            continue;
-        }
-        if (fanout->getInput(this).ctrlVal == value) {
-            fanout->value = value;
-            fanout->forwardImplication();
-        }
-    }
-}
-
-void Gate::backwardImplication()
-{
-    for (auto &fanin : fan_in) {
-		if (value == 0) {
-            if (fanin.ctrlVal != -1) {
-				if (fanin.ptr->value == -1) {
-					fanin.ptr->value = 0;
-				}
-				else {
-					//conflict
-				}
-            }
-        } else if (value == 1) {
-            //  indirect
-        }
-    }
-}
-
 const ThresholdInput& Gate::getInput(const Gate* target)
 {
     for (const ThresholdInput& input : fan_in) {

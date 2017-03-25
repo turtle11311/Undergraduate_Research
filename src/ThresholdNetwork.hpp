@@ -16,6 +16,11 @@
  */
 typedef std::map<std::string, Gate*> GateDict;
 
+struct ImplacationGate {
+    Gate *ptr;
+    ImplicationType action;
+};
+
 class ThresholdNetworkDebugger;
 /*!
  * \class ThresholdNetwork ThresholdNetwork.hpp
@@ -48,7 +53,6 @@ public:
      * evaluate dominators, CEVs, FanoutCone and side inputs for each gates in this network
      */
     void evalMandatoryAssignments();
-    void simulateStuckAt(Gate* target, int stuckAt);
     void foreachGateAttr();
     void _Debug_Wiring();
     void _Debug_Onset_Critical_Effect_Vector();

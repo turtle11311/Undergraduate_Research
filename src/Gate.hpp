@@ -23,6 +23,7 @@ class Gate;
 * Forth(3) Internal mean the gate has both fanin & fanout
 */
 enum GateType { Constant, PI, PO, Internal };
+enum ImplicationType { FORWARD, BACKWARD };
 /*!
 * \typedef std::vector<std::vector<int>> PatternTable
 * Storage of onset/offset critical effect vectors
@@ -33,10 +34,10 @@ typedef std::vector<std::vector<int>> PatternTable;
 * \breif Threshold gate input
 */
 struct ThresholdInput {
-    Gate* ptr;
-    int weight;
-    bool inverter;
-    int ctrlVal;
+    Gate* ptr;          /*!< Pointer of input gate */
+    int weight;         /*!< Weight of input */
+    bool inverter;      /*!< This input has inverter */
+    int ctrlVal;        /*!< Controlling value of input */
 };
 /*!
 * \struct GateAttr Gate.hpp
@@ -111,8 +112,6 @@ public:
      */
     void checkContollingValueState( int mode );
 
-    void forwardImplication();
-    void backwardImplication();
     const ThresholdInput& getInput(const Gate* target);
     void _Debug_Gate_Information();
     int sideInputControllingValCount;       /*!< sum of number of sidInput's controlling Val*/

@@ -55,34 +55,60 @@ void ThresholdNetwork::evalMandatoryAssignments()
         if (!gate.second->sideInputs.empty())
             targetGateList.push_back(gate.second);
     }
+    std::list<ImplacationGate> queue;
     for (Gate* target : targetGateList) {
-        simulateStuckAt(target, 0);
-        // simulateStuckAt(target, 1);
-    }
-}
-
-void ThresholdNetwork::simulateStuckAt(Gate* target, int stuckAt)
-{
-    std::list<Gate*> modifyList;
-    target->value = !stuckAt;
-    for (Gate* sideInput : target->sideInputs) {
-        for (const ThresholdInput &controllingGate : sideInput->fan_in) {
-            if (controllingGate.ctrlVal != -1) {
-                controllingGate.ptr->value = !controllingGate.ctrlVal;
-                modifyList.push_back(controllingGate.ptr);
+        // Stuck at 0
+        target->value = 1;
+        queue.push_back(ImplacationGate({ target, FORWARD}));
+        queue.push_back(ImplacationGate({ target, BACKWARD}));
+        while (!queue.empty()) {
+            auto nowGate = queue.front();
+            switch (nowGate.action) {
+            case FORWARD:
+                for (Gate* fanout : nowGate.ptr->fan_out) {
+                    if (fanout->value != -1) {
+                        queue.push_back(ImplacationGate({fanout, BACKWARD}));
+                        continue;
+                    }
+                    // Have three states: no ctrlVal, same ctrlVal and not same ctrlVal
+                    if (fanout->getInput(nowGate.ptr).ctrlVal == -1) {
+                        // DO NOTHING
+                    } else if (fanout->getInput(nowGate.ptr).ctrlVal == nowGate.ptr->value) {
+                        fanout->value = nowGate.ptr->value;
+                        queue.push_back(ImplacationGate({fanout, FORWARD}));
+                    } else {
+                        /* Refresh fanout gate CEV */
+                    }
+                }
+                break;
+            case BACKWARD:
+                for (auto &fanin : nowGate.ptr->fan_in) {
+                    if (nowGate.ptr->value == 0) {
+                        if (fanin.ctrlVal != -1) {
+                            if (fanin.ptr->value == -1) {
+                                fanin.ptr->value = 0;
+                                queue.push_back(ImplacationGate({fanin.ptr, BACKWARD}));
+                                queue.push_back(ImplacationGate({fanin.ptr, FORWARD}));
+                            }
+                            else {
+                                if (fanin.ptr->value == 1) {
+                                    queue.clear();
+                                    // add flag
+                                }
+                            }
+                        }
+                    }
+                    else if (nowGate.ptr->value == 1) {
+                        //  indirect
+                    }
+                }
+                break;
+            default:
+                break;
             }
+            queue.pop_front();
         }
     }
-    target->forwardImplication();
-    target->backwardImplication();
-    for (Gate* modifyGate : modifyList) {
-        modifyGate->forwardImplication();
-        modifyGate->backwardImplication();
-    }
-    for (Gate* modifyGate : modifyList) {
-        modifyGate->value = -1;
-    }
-    target->value = -1;
 }
 
 void ThresholdNetwork::_Debug_Onset_Critical_Effect_Vector(){
