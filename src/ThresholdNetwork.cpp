@@ -51,6 +51,12 @@ void ThresholdNetwork::_Debug_Wiring()
 
 void ThresholdNetwork::evalMandatoryAssignments()
 {
+    /*-----------------------------------------------------------
+    add inverter
+    side input assign value
+    each gate find MA
+    side input, side input implied MA reuse
+    -----------------------------------------------------------*/
     std::set<Gate*> MA0;
     std::set<Gate*> MA1;
     for (auto gate : gatePool) {
@@ -65,7 +71,7 @@ void ThresholdNetwork::evalMandatoryAssignments()
         target->value = 1;
         queue.push_back(ImplacationGate({ target, FORWARD}));
         queue.push_back(ImplacationGate({ target, BACKWARD}));
-        
+
         while (!queue.empty() && hasMA) {
             auto nowGate = queue.front();
             queue.pop_front();
@@ -73,26 +79,81 @@ void ThresholdNetwork::evalMandatoryAssignments()
             case FORWARD:
                 for (Gate* fanout : nowGate.ptr->fan_out) {
                     if (fanout->value != -1) {
+                        // fanout's value == 1
                         if (fanout->value == 1) {
+                            // 1 ctrl input
                             if (fanout->getInput(nowGate.ptr).ctrlVal == 1) {
-                                if (nowGate.ptr->value == 0) {
-                                    hasMA = false;
-                                    queue.clear();
-                                    break;
+                                // has inverter
+                                if (fanout->getInput(nowGate.ptr).inverter){
+                                    if ((!nowGate.ptr->value) == 0){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                                else{
+                                    if (nowGate.ptr->value == 0){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
                                 }
                             }
-                        } else {
-                            if (!fanout->getInput(nowGate.ptr).ptr) {
-                                if (nowGate.ptr->value == 1) {
-                                    hasMA = false;
-                                    queue.clear();
-                                    break;
+                            else { // 0 ctrl input
+                                if (fanout->getInput(nowGate.ptr).inverter){
+                                    if ((!nowGate.ptr->value) == 0){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                                else{
+                                    if (nowGate.ptr->value == 0){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                            }
+                        } else { // fanout's value == 0
+                            // 1 ctrl input
+                            if ( fanout->getInput(nowGate.ptr)->ctrlVal == 1 ){
+                                if (fanout->getInput(nowGate.ptr).inverter){
+                                    if ((!nowGate.ptr->value) == 1){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                                else{
+                                    if (nowGate.ptr->value == 1){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                            }
+                            else{ // 0 ctrl input
+                                if (fanout->getInput(nowGate.ptr).inverter){
+                                    if ((!nowGate.ptr->value) == 1){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                                else{
+                                    if (nowGate.ptr->value == 1){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
                                 }
                             }
                         }
                         queue.push_back(ImplacationGate({ fanout, BACKWARD }));
                         continue;
                     }
+                    ////////////////////////改到這
                     // Have three states: no ctrlVal, same ctrlVal and not same ctrlVal
                     if (fanout->getInput(nowGate.ptr).ctrlVal == -1) {
                         // DO NOTHING
@@ -143,7 +204,7 @@ void ThresholdNetwork::evalMandatoryAssignments()
         target->value = 0;
         queue.push_back(ImplacationGate({ target, FORWARD}));
         queue.push_back(ImplacationGate({ target, BACKWARD}));
-        
+
         while (!queue.empty() && hasMA) {
             auto nowGate = queue.front();
             queue.pop_front();
