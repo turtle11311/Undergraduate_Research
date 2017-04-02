@@ -31,8 +31,7 @@ void ThresholdNetwork::foreachGateAttr()
     }
 }
 
-void ThresholdNetwork::_Debug_Wiring()
-{
+void ThresholdNetwork::_Debug_Wiring(){
     for (auto& gate : gatePool) {
         std::cout << "Name: " << gate.first << "-> " << gate.second->thresholdVal << std::endl;
         std::cout << "FANIN: " << std::endl;
@@ -49,8 +48,7 @@ void ThresholdNetwork::_Debug_Wiring()
 }
 
 
-void ThresholdNetwork::evalMandatoryAssignments()
-{
+void ThresholdNetwork::evalMandatoryAssignments(){
     /*-----------------------------------------------------------
     add inverter
     side input assign value
@@ -153,41 +151,80 @@ void ThresholdNetwork::evalMandatoryAssignments()
                         queue.push_back(ImplacationGate({ fanout, BACKWARD }));
                         continue;
                     }
-                    ////////////////////////改到這
                     // Have three states: no ctrlVal, same ctrlVal and not same ctrlVal
                     if (fanout->getInput(nowGate.ptr).ctrlVal == -1) {
                         // DO NOTHING
                     } else if (fanout->getInput(nowGate.ptr).ctrlVal == nowGate.ptr->value) {
-                        fanout->value = nowGate.ptr->value;
+                        fanout->value =
+                        ( fanout->getInput(nowGate.ptr).inverter ) ? !nowGate.ptr->value : nowGate.ptr->value;
                         modifyList.push_back(fanout);
                         queue.push_back(ImplacationGate({fanout, FORWARD}));
                     } else {
                         /* Refresh fanout gate CEV */
+                        // not sure
+                        fanout->thresholdVal -= fanout->getInput(nowGate.ptr).weight;
+                        fanout->getInput(nowGate.ptr).weight = 0;
+                        fanout->evalCriticalEffectVectors();
+                        fanout->checkContollingValueState(0);
+                        fanout->checkContollingValueState(1);
+                        /* should do something,
+                            put this fanout into queue, or put current gate into queue again?*/
                     }
                 }
                 break;
             case BACKWARD:
+                // if nowGate have been Refresh the cevtable, should be put into queue again
+                bool doBackwardAgain == false;
                 for (auto &fanin : nowGate.ptr->fan_in) {
                     if (nowGate.ptr->value == 0) {
+                        // this fanin has ctrlVal
                         if (fanin.ctrlVal != -1) {
+                            // this fanin has value
                             if (fanin.ptr->value == -1) {
-                                fanin.ptr->value = 0;
+                                fanin.ptr->value = (!fanin.inverter)? 0 : 1;
                                 modifyList.push_back(fanin.ptr);
                                 queue.push_back(ImplacationGate({fanin.ptr, BACKWARD}));
                                 queue.push_back(ImplacationGate({fanin.ptr, FORWARD}));
                             }
                             else {
-                                if (fanin.ptr->value == 1) {
-                                    queue.clear();
-                                    // add flag
+                                if ( !fanin.inverter ){
+                                    // check conflict
+                                    if (fanin.ptr->value == 1) {
+                                        queue.clear();
+                                        // add flag
+                                    }
+                                    else{ // Refresh cevtable
+                                        nowGate->thresholdVal -= fanin.weight;
+                                        fanin.weight = 0;
+                                        nowGate->evalCriticalEffectVectors();
+                                        nowGate->checkContollingValueState(0);
+                                        nowGate->checkContollingValueState(1);
+                                        doBackwardAgain = true;
+                                    }
+                                }
+                                else {
+                                    if (fanin.ptr->value == 0) {
+                                        queue.clear();
+                                        // add flag
+                                    }
+                                    else{
+                                        nowGate->thresholdVal -= fanin.weight;
+                                        fanin.weight = 0;
+                                        nowGate->evalCriticalEffectVectors();
+                                        nowGate->checkContollingValueState(0);
+                                        nowGate->checkContollingValueState(1);
+                                        doBackwardAgain = true;
+                                    }
                                 }
                             }
                         }
                     }
-                    else if (nowGate.ptr->value == 1) {
-                        //  indirect
+                    //else if(nowGate.ptr->value == 1)
+                    else {
+                        // indirect imply
                     }
                 }
+                queue.push_back({nowGate,BACKWARD});
                 break;
             default:
                 break;
@@ -319,8 +356,7 @@ void ThresholdNetwork::_Debug_Controlling_Value(){
     }
 }
 
-void ThresholdNetwork::_Debug_Check_The_Sum_Of_The_Number_Of_Side_Inputs()
-{
+void ThresholdNetwork::_Debug_Check_The_Sum_Of_The_Number_Of_Side_Inputs(){
     cout << "Information:" << endl;
     cout << "Gate number:" << gatePool.size() - start.fan_out.size() - end.fan_in.size() << endl;
     cout << "TargetGate number: " << targetGateList.size() << endl;
