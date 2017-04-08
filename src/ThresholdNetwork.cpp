@@ -71,21 +71,19 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         target->value = 1;
         ImplacationGate impGate;
         impGate.ptr = target;
-        impGate.action = BACKWARD;
-        queue.push_back(impGate);
-        if ( queue.back().action == BACKWARD ) cout << "FUCK1" <<endl;
         impGate.action = FORWARD;
         queue.push_back(impGate);
-        if ( queue.back().action == FORWARD ) cout << "FUCK2" <<endl;
+        impGate.action = BACKWARD;
+        queue.push_back(impGate);
         cout << "Stuck at 0 start." << endl;
-        int counting = 0;
         while (!queue.empty() && hasMA) {
-            cout << "count" << ++counting << endl;
-            ImplacationGate nowGate = queue.front();
+            ImplacationGate nowGate;
+            nowGate.ptr = queue.front().ptr;
+            nowGate.action = queue.front().action;
             queue.pop_front();
+            cout << "current: " << nowGate.ptr->name << endl;
             cout << ( ( nowGate.action == FORWARD ) ? "FORWARD" : "BACKWARD" )<< endl;
             if ( nowGate.action == FORWARD ){
-                cout << "FORWARD" << endl;
                 for (Gate* fanout : nowGate.ptr->fan_out) {
                     if (fanout->value != -1) {
                         // fanout's value == 1
@@ -206,7 +204,6 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                 }
             }
             else if ( nowGate.action == BACKWARD ){
-                cout << "BACKWARD" << endl;
                 // if nowGate have been Refresh the cevtable, should be put into queue again
                 //bool doBackwardAgain = false;
                 for (auto &fanin : nowGate.ptr->fan_in) {
@@ -215,6 +212,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                         if (fanin.ctrlVal != -1) {
                             // this fanin has value
                             if (fanin.ptr->value == -1) {
+                                cout << "Implied." <<endl;
                                 fanin.ptr->value = (!fanin.inverter)? 0 : 1;
                                 modifyList.push_back(fanin.ptr);
                                 queue.push_back(ImplacationGate({fanin.ptr, BACKWARD}));
@@ -260,20 +258,18 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                         // indirect imply
                     }
                 }
-                queue.push_back(ImplacationGate({nowGate.ptr,BACKWARD}));
+                //queue.push_back(ImplacationGate({nowGate.ptr,BACKWARD}));
             }
             else {
             }
-
-            if (!queue.empty()) queue.pop_front();
         }
         MA0.insert(modifyList.begin(), modifyList.end());
-        cout << "MA0--------------------------------------------------" << endl;
         for (Gate* gate : modifyList) {
             cout << gate->name << ": " << gate->value << " ";
             gate->value = -1;
         }
         cout << endl;
+        if ( !hasMA ) cout << "noMA" << endl;
         modifyList.clear();
 
         hasMA = true;
@@ -285,10 +281,13 @@ void ThresholdNetwork::evalMandatoryAssignments(){
 
         cout << "Stuck at 1 start." << endl;
         while (!queue.empty() && hasMA) {
-            auto nowGate = queue.front();
+            ImplacationGate nowGate;
+            nowGate.ptr = queue.front().ptr;
+            nowGate.action = queue.front().action;
             queue.pop_front();
-            switch (nowGate.action) {
-            case FORWARD:
+            cout << "current: " << nowGate.ptr->name << endl;
+            cout << ( ( nowGate.action == FORWARD ) ? "FORWARD" : "BACKWARD" )<< endl;
+            if ( nowGate.action == FORWARD ){
                 for (Gate* fanout : nowGate.ptr->fan_out) {
                     if (fanout->value != -1) {
                         // fanout's value == 1
@@ -372,6 +371,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                         int complement = !nowGate.ptr->value;
                         if ( fanout->getInput(nowGate.ptr).inverter ){
                             if (fanout->getInput(nowGate.ptr).ctrlVal == complement) {
+                                cout << "Implied." << endl;
                                 fanout->value = complement;
                                 modifyList.push_back(fanout);
                                 queue.push_back(ImplacationGate({fanout, FORWARD}));
@@ -388,6 +388,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                             }
                         } else {
                             if (fanout->getInput(nowGate.ptr).ctrlVal == nowGate.ptr->value) {
+                                cout << "Implied." << endl;
                                 fanout->value = nowGate.ptr->value;
                                 modifyList.push_back(fanout);
                                 queue.push_back(ImplacationGate({fanout, FORWARD}));
@@ -405,8 +406,8 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                         }
                     }
                 }
-                break;
-            case BACKWARD:
+            }
+            else if ( nowGate.action == BACKWARD ){
                 // if nowGate have been Refresh the cevtable, should be put into queue again
                 //bool doBackwardAgain = false;
                 for (auto &fanin : nowGate.ptr->fan_in) {
@@ -415,6 +416,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                         if (fanin.ctrlVal != -1) {
                             // this fanin has value
                             if (fanin.ptr->value == -1) {
+                                cout << "Implied." <<endl;
                                 fanin.ptr->value = (!fanin.inverter)? 0 : 1;
                                 modifyList.push_back(fanin.ptr);
                                 queue.push_back(ImplacationGate({fanin.ptr, BACKWARD}));
@@ -460,21 +462,19 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                         // indirect imply
                     }
                 }
-                queue.push_back(ImplacationGate({nowGate.ptr,BACKWARD}));
-                break;
-            default:
-                break;
+                //queue.push_back(ImplacationGate({nowGate.ptr,BACKWARD}));
             }
-            if (!queue.empty()) queue.pop_front();
+            else {
+            }
         }
         MA1.insert(modifyList.begin(), modifyList.end());
-        cout << "MA1--------------------------------------------------" << endl;
         for (Gate* gate : modifyList) {
             cout << gate->name << ": " << gate->value << " ";
             gate->value = -1;
         }
         cout << endl;
         modifyList.clear();
+        if ( !hasMA ) cout << "noMA" << endl;
     }
 }
 
