@@ -62,14 +62,228 @@ void ThresholdNetwork::evalMandatoryAssignments(){
             targetGateList.push_back(gate.second);
     }
     std::list<ImplacationGate> queue;
+    cout << "evalMandatoryAssignments start." << endl;
     for (Gate* target : targetGateList) {
+        cout << "Target: " << target->name << endl;
         bool hasMA = true;
         std::list<Gate*> modifyList;
         // Stuck at 0
         target->value = 1;
+        ImplacationGate impGate;
+        impGate.ptr = target;
+        impGate.action = BACKWARD;
+        queue.push_back(impGate);
+        if ( queue.back().action == BACKWARD ) cout << "FUCK1" <<endl;
+        impGate.action = FORWARD;
+        queue.push_back(impGate);
+        if ( queue.back().action == FORWARD ) cout << "FUCK2" <<endl;
+        cout << "Stuck at 0 start." << endl;
+        int counting = 0;
+        while (!queue.empty() && hasMA) {
+            cout << "count" << ++counting << endl;
+            ImplacationGate nowGate = queue.front();
+            queue.pop_front();
+            cout << ( ( nowGate.action == FORWARD ) ? "FORWARD" : "BACKWARD" )<< endl;
+            if ( nowGate.action == FORWARD ){
+                cout << "FORWARD" << endl;
+                for (Gate* fanout : nowGate.ptr->fan_out) {
+                    if (fanout->value != -1) {
+                        // fanout's value == 1
+                        if (fanout->value == 1) {
+                            // 1 ctrl input
+                            if (fanout->getInput(nowGate.ptr).ctrlVal == 1) {
+                                // has inverter
+                                if (fanout->getInput(nowGate.ptr).inverter){
+                                    if ((!nowGate.ptr->value) == 0){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                                else{
+                                    if (nowGate.ptr->value == 0){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                            }
+                            else { // 0 ctrl input
+                                if (fanout->getInput(nowGate.ptr).inverter){
+                                    if ((!nowGate.ptr->value) == 0){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                                else{
+                                    if (nowGate.ptr->value == 0){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                            }
+                        } else { // fanout's value == 0
+                            // 1 ctrl input
+                            if ( fanout->getInput(nowGate.ptr).ctrlVal == 1 ){
+                                if (fanout->getInput(nowGate.ptr).inverter){
+                                    if ((!nowGate.ptr->value) == 1){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                                else{
+                                    if (nowGate.ptr->value == 1){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                            }
+                            else{ // 0 ctrl input
+                                if (fanout->getInput(nowGate.ptr).inverter){
+                                    if ((!nowGate.ptr->value) == 1){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                                else{
+                                    if (nowGate.ptr->value == 1){
+                                        hasMA = false;
+                                        queue.clear();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        queue.push_back(ImplacationGate({ fanout, BACKWARD }));
+                        continue;
+                    }
+                    // Have three states: no ctrlVal, same ctrlVal and not same ctrlVal
+                    if (fanout->getInput(nowGate.ptr).ctrlVal == -1) {
+                        // DO NOTHING
+                    } else {
+                        int complement = !nowGate.ptr->value;
+                        if ( fanout->getInput(nowGate.ptr).inverter ){
+                            if (fanout->getInput(nowGate.ptr).ctrlVal == complement) {
+                                cout << "Implied." << endl;
+                                fanout->value = complement;
+                                modifyList.push_back(fanout);
+                                queue.push_back(ImplacationGate({fanout, FORWARD}));
+                            } else{ // can't imply
+                            /*Refresh fanout gate CEV */
+                            //not sure
+                            //fanout->thresholdVal -= fanout->getInput(nowGate.ptr).weight;
+                            //fanout->getInput(nowGate.ptr).weight = 0;
+                            //fanout->evalCriticalEffectVectors();
+                            //fanout->checkContollingValueState(0);
+                            //fanout->checkContollingValueState(1);
+                            /*should do something,
+                            put this fanout into queue, or put current gate into queue again?*/
+                            }
+                        } else {
+                            if (fanout->getInput(nowGate.ptr).ctrlVal == nowGate.ptr->value) {
+                                cout << "Implied." << endl;
+                                fanout->value = nowGate.ptr->value;
+                                modifyList.push_back(fanout);
+                                queue.push_back(ImplacationGate({fanout, FORWARD}));
+                            } else{ // can't imply
+                                /*Refresh fanout gate CEV */
+                                //not sure
+                                //fanout->thresholdVal -= fanout->getInput(nowGate.ptr).weight;
+                                //fanout->getInput(nowGate.ptr).weight = 0;
+                                //fanout->evalCriticalEffectVectors();
+                                //fanout->checkContollingValueState(0);
+                                //fanout->checkContollingValueState(1);
+                                /*should do something,
+                                put this fanout into queue, or put current gate into queue again?*/
+                            }
+                        }
+                    }
+                }
+            }
+            else if ( nowGate.action == BACKWARD ){
+                cout << "BACKWARD" << endl;
+                // if nowGate have been Refresh the cevtable, should be put into queue again
+                //bool doBackwardAgain = false;
+                for (auto &fanin : nowGate.ptr->fan_in) {
+                    if (nowGate.ptr->value == 0) {
+                        // this fanin
+                        if (fanin.ctrlVal != -1) {
+                            // this fanin has value
+                            if (fanin.ptr->value == -1) {
+                                fanin.ptr->value = (!fanin.inverter)? 0 : 1;
+                                modifyList.push_back(fanin.ptr);
+                                queue.push_back(ImplacationGate({fanin.ptr, BACKWARD}));
+                                queue.push_back(ImplacationGate({fanin.ptr, FORWARD}));
+                            }
+                            else {
+                                if ( !fanin.inverter ){
+                                    // check conflict
+                                    if (fanin.ptr->value == 1) {
+                                        hasMA = false;
+                                        queue.clear();
+                                        // add flag
+                                    }
+                                    else{ // Refresh cevtable
+                                        // nowGate->thresholdVal -= fanin.weight;
+                                        // fanin.weight = 0;
+                                        // nowGate->evalCriticalEffectVectors();
+                                        // nowGate->checkContollingValueState(0);
+                                        // nowGate->checkContollingValueState(1);
+                                        // doBackwardAgain = true;
+                                    }
+                                }
+                                else {
+                                    if (fanin.ptr->value == 0) {
+                                        hasMA = false;
+                                        queue.clear();
+                                        // add flag
+                                    }
+                                    else{
+                                        // nowGate->thresholdVal -= fanin.weight;
+                                        // fanin.weight = 0;
+                                        // nowGate->evalCriticalEffectVectors();
+                                        // nowGate->checkContollingValueState(0);
+                                        // nowGate->checkContollingValueState(1);
+                                        // doBackwardAgain = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    //else if(nowGate.ptr->value == 1)
+                    else {
+                        // indirect imply
+                    }
+                }
+                queue.push_back(ImplacationGate({nowGate.ptr,BACKWARD}));
+            }
+            else {
+            }
+
+            if (!queue.empty()) queue.pop_front();
+        }
+        MA0.insert(modifyList.begin(), modifyList.end());
+        cout << "MA0--------------------------------------------------" << endl;
+        for (Gate* gate : modifyList) {
+            cout << gate->name << ": " << gate->value << " ";
+            gate->value = -1;
+        }
+        cout << endl;
+        modifyList.clear();
+
+        hasMA = true;
+        queue.clear();
+        // Stuck at 1
+        target->value = 0;
         queue.push_back(ImplacationGate({ target, FORWARD}));
         queue.push_back(ImplacationGate({ target, BACKWARD}));
 
+        cout << "Stuck at 1 start." << endl;
         while (!queue.empty() && hasMA) {
             auto nowGate = queue.front();
             queue.pop_front();
@@ -115,7 +329,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                             }
                         } else { // fanout's value == 0
                             // 1 ctrl input
-                            if ( fanout->getInput(nowGate.ptr)->ctrlVal == 1 ){
+                            if ( fanout->getInput(nowGate.ptr).ctrlVal == 1 ){
                                 if (fanout->getInput(nowGate.ptr).inverter){
                                     if ((!nowGate.ptr->value) == 1){
                                         hasMA = false;
@@ -154,30 +368,50 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                     // Have three states: no ctrlVal, same ctrlVal and not same ctrlVal
                     if (fanout->getInput(nowGate.ptr).ctrlVal == -1) {
                         // DO NOTHING
-                    } else if (fanout->getInput(nowGate.ptr).ctrlVal == nowGate.ptr->value) {
-                        fanout->value =
-                        ( fanout->getInput(nowGate.ptr).inverter ) ? !nowGate.ptr->value : nowGate.ptr->value;
-                        modifyList.push_back(fanout);
-                        queue.push_back(ImplacationGate({fanout, FORWARD}));
                     } else {
-                        /* Refresh fanout gate CEV */
-                        // not sure
-                        fanout->thresholdVal -= fanout->getInput(nowGate.ptr).weight;
-                        fanout->getInput(nowGate.ptr).weight = 0;
-                        fanout->evalCriticalEffectVectors();
-                        fanout->checkContollingValueState(0);
-                        fanout->checkContollingValueState(1);
-                        /* should do something,
+                        int complement = !nowGate.ptr->value;
+                        if ( fanout->getInput(nowGate.ptr).inverter ){
+                            if (fanout->getInput(nowGate.ptr).ctrlVal == complement) {
+                                fanout->value = complement;
+                                modifyList.push_back(fanout);
+                                queue.push_back(ImplacationGate({fanout, FORWARD}));
+                            } else{ // can't imply
+                            /*Refresh fanout gate CEV */
+                            //not sure
+                            //fanout->thresholdVal -= fanout->getInput(nowGate.ptr).weight;
+                            //fanout->getInput(nowGate.ptr).weight = 0;
+                            //fanout->evalCriticalEffectVectors();
+                            //fanout->checkContollingValueState(0);
+                            //fanout->checkContollingValueState(1);
+                            /*should do something,
                             put this fanout into queue, or put current gate into queue again?*/
+                            }
+                        } else {
+                            if (fanout->getInput(nowGate.ptr).ctrlVal == nowGate.ptr->value) {
+                                fanout->value = nowGate.ptr->value;
+                                modifyList.push_back(fanout);
+                                queue.push_back(ImplacationGate({fanout, FORWARD}));
+                            } else{ // can't imply
+                                /*Refresh fanout gate CEV */
+                                //not sure
+                                //fanout->thresholdVal -= fanout->getInput(nowGate.ptr).weight;
+                                //fanout->getInput(nowGate.ptr).weight = 0;
+                                //fanout->evalCriticalEffectVectors();
+                                //fanout->checkContollingValueState(0);
+                                //fanout->checkContollingValueState(1);
+                                /*should do something,
+                                put this fanout into queue, or put current gate into queue again?*/
+                            }
+                        }
                     }
                 }
                 break;
             case BACKWARD:
                 // if nowGate have been Refresh the cevtable, should be put into queue again
-                bool doBackwardAgain == false;
+                //bool doBackwardAgain = false;
                 for (auto &fanin : nowGate.ptr->fan_in) {
                     if (nowGate.ptr->value == 0) {
-                        // this fanin has ctrlVal
+                        // this fanin
                         if (fanin.ctrlVal != -1) {
                             // this fanin has value
                             if (fanin.ptr->value == -1) {
@@ -190,30 +424,32 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                                 if ( !fanin.inverter ){
                                     // check conflict
                                     if (fanin.ptr->value == 1) {
+                                        hasMA = false;
                                         queue.clear();
                                         // add flag
                                     }
                                     else{ // Refresh cevtable
-                                        nowGate->thresholdVal -= fanin.weight;
-                                        fanin.weight = 0;
-                                        nowGate->evalCriticalEffectVectors();
-                                        nowGate->checkContollingValueState(0);
-                                        nowGate->checkContollingValueState(1);
-                                        doBackwardAgain = true;
+                                        // nowGate->thresholdVal -= fanin.weight;
+                                        // fanin.weight = 0;
+                                        // nowGate->evalCriticalEffectVectors();
+                                        // nowGate->checkContollingValueState(0);
+                                        // nowGate->checkContollingValueState(1);
+                                        // doBackwardAgain = true;
                                     }
                                 }
                                 else {
                                     if (fanin.ptr->value == 0) {
+                                        hasMA = false;
                                         queue.clear();
                                         // add flag
                                     }
                                     else{
-                                        nowGate->thresholdVal -= fanin.weight;
-                                        fanin.weight = 0;
-                                        nowGate->evalCriticalEffectVectors();
-                                        nowGate->checkContollingValueState(0);
-                                        nowGate->checkContollingValueState(1);
-                                        doBackwardAgain = true;
+                                        // nowGate->thresholdVal -= fanin.weight;
+                                        // fanin.weight = 0;
+                                        // nowGate->evalCriticalEffectVectors();
+                                        // nowGate->checkContollingValueState(0);
+                                        // nowGate->checkContollingValueState(1);
+                                        // doBackwardAgain = true;
                                     }
                                 }
                             }
@@ -224,94 +460,20 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                         // indirect imply
                     }
                 }
-                queue.push_back({nowGate,BACKWARD});
+                queue.push_back(ImplacationGate({nowGate.ptr,BACKWARD}));
                 break;
             default:
                 break;
             }
             if (!queue.empty()) queue.pop_front();
         }
-        MA0.insert(modifyList.begin(), modifyList.end());
-        for (Gate* gate : modifyList) {
-            gate->value = -1;
-        }
-        modifyList.clear();
-
-        // Stuck at 1
-        target->value = 0;
-        queue.push_back(ImplacationGate({ target, FORWARD}));
-        queue.push_back(ImplacationGate({ target, BACKWARD}));
-
-        while (!queue.empty() && hasMA) {
-            auto nowGate = queue.front();
-            queue.pop_front();
-            switch (nowGate.action) {
-            case FORWARD:
-                for (Gate* fanout : nowGate.ptr->fan_out) {
-                    if (fanout->value != -1) {
-                        if (fanout->value == 1) {
-                            if (fanout->getInput(nowGate.ptr).ctrlVal == 1) {
-                                if (nowGate.ptr->value == 0) {
-                                    hasMA = false;
-                                    queue.clear();
-                                    break;
-                                }
-                            }
-                        } else {
-                            if (!fanout->getInput(nowGate.ptr).ptr) {
-                                if (nowGate.ptr->value == 1) {
-                                    hasMA = false;
-                                    queue.clear();
-                                    break;
-                                }
-                            }
-                        }
-                        queue.push_back(ImplacationGate({ fanout, BACKWARD }));
-                        continue;
-                    }
-                    // Have three states: no ctrlVal, same ctrlVal and not same ctrlVal
-                    if (fanout->getInput(nowGate.ptr).ctrlVal == -1) {
-                        // DO NOTHING
-                    } else if (fanout->getInput(nowGate.ptr).ctrlVal == nowGate.ptr->value) {
-                        fanout->value = nowGate.ptr->value;
-                        modifyList.push_back(fanout);
-                        queue.push_back(ImplacationGate({fanout, FORWARD}));
-                    } else {
-                        /* Refresh fanout gate CEV */
-                    }
-                }
-                break;
-            case BACKWARD:
-                for (auto &fanin : nowGate.ptr->fan_in) {
-                    if (nowGate.ptr->value == 0) {
-                        if (fanin.ctrlVal != -1) {
-                            if (fanin.ptr->value == -1) {
-                                fanin.ptr->value = 0;
-                                modifyList.push_back(fanin.ptr);
-                                queue.push_back(ImplacationGate({fanin.ptr, BACKWARD}));
-                                queue.push_back(ImplacationGate({fanin.ptr, FORWARD}));
-                            }
-                            else {
-                                if (fanin.ptr->value == 1) {
-                                    queue.clear();
-                                    // add flag
-                                }
-                            }
-                        }
-                    }
-                    else if (nowGate.ptr->value == 1) {
-                        //  indirect
-                    }
-                }
-                break;
-            default:
-                break;
-            }
-        }
         MA1.insert(modifyList.begin(), modifyList.end());
+        cout << "MA1--------------------------------------------------" << endl;
         for (Gate* gate : modifyList) {
+            cout << gate->name << ": " << gate->value << " ";
             gate->value = -1;
         }
+        cout << endl;
         modifyList.clear();
     }
 }
