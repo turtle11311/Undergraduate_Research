@@ -61,7 +61,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         if (!gate.second->sideInputs.empty())
             targetGateList.push_back(gate.second);
     }
-    std::list<ImplacationGate> queue;
+    std::list<ImplicationGate> queue;
     cout << "evalMandatoryAssignments start." << endl;
     for (Gate* target : targetGateList) {
         cout << "Target: " << target->name << endl;
@@ -69,7 +69,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         std::list<Gate*> modifyList;
         // Stuck at 0
         target->value = 1;
-        ImplacationGate impGate;
+        ImplicationGate impGate;
         impGate.ptr = target;
         impGate.action = FORWARD;
         queue.push_back(impGate);
@@ -77,7 +77,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         queue.push_back(impGate);
         cout << "Stuck at 0 start." << endl;
         while (!queue.empty() && hasMA) {
-            ImplacationGate nowGate;
+            ImplicationGate nowGate;
             nowGate.ptr = queue.front().ptr;
             nowGate.action = queue.front().action;
             queue.pop_front();
@@ -157,7 +157,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                                 }
                             }
                         }
-                        queue.push_back(ImplacationGate({ fanout, BACKWARD }));
+                        queue.push_back(ImplicationGate({ fanout, BACKWARD }));
                         continue;
                     }
                     // Have three states: no ctrlVal, same ctrlVal and not same ctrlVal
@@ -170,7 +170,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                                 cout << "Implied." << endl;
                                 fanout->value = complement;
                                 modifyList.push_back(fanout);
-                                queue.push_back(ImplacationGate({fanout, FORWARD}));
+                                queue.push_back(ImplicationGate({fanout, FORWARD}));
                             } else{ // can't imply
                             /*Refresh fanout gate CEV */
                             //not sure
@@ -187,7 +187,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                                 cout << "Implied." << endl;
                                 fanout->value = nowGate.ptr->value;
                                 modifyList.push_back(fanout);
-                                queue.push_back(ImplacationGate({fanout, FORWARD}));
+                                queue.push_back(ImplicationGate({fanout, FORWARD}));
                             } else{ // can't imply
                                 /*Refresh fanout gate CEV */
                                 //not sure
@@ -215,8 +215,8 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                                 cout << "Implied." <<endl;
                                 fanin.ptr->value = (!fanin.inverter)? 0 : 1;
                                 modifyList.push_back(fanin.ptr);
-                                queue.push_back(ImplacationGate({fanin.ptr, BACKWARD}));
-                                queue.push_back(ImplacationGate({fanin.ptr, FORWARD}));
+                                queue.push_back(ImplicationGate({fanin.ptr, BACKWARD}));
+                                queue.push_back(ImplicationGate({fanin.ptr, FORWARD}));
                             }
                             else {
                                 if ( !fanin.inverter ){
@@ -276,12 +276,12 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         queue.clear();
         // Stuck at 1
         target->value = 0;
-        queue.push_back(ImplacationGate({ target, FORWARD}));
-        queue.push_back(ImplacationGate({ target, BACKWARD}));
+        queue.push_back(ImplicationGate({ target, FORWARD}));
+        queue.push_back(ImplicationGate({ target, BACKWARD}));
 
         cout << "Stuck at 1 start." << endl;
         while (!queue.empty() && hasMA) {
-            ImplacationGate nowGate;
+            ImplicationGate nowGate;
             nowGate.ptr = queue.front().ptr;
             nowGate.action = queue.front().action;
             queue.pop_front();
@@ -361,7 +361,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                                 }
                             }
                         }
-                        queue.push_back(ImplacationGate({ fanout, BACKWARD }));
+                        queue.push_back(ImplicationGate({ fanout, BACKWARD }));
                         continue;
                     }
                     // Have three states: no ctrlVal, same ctrlVal and not same ctrlVal
@@ -374,7 +374,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                                 cout << "Implied." << endl;
                                 fanout->value = complement;
                                 modifyList.push_back(fanout);
-                                queue.push_back(ImplacationGate({fanout, FORWARD}));
+                                queue.push_back(ImplicationGate({fanout, FORWARD}));
                             } else{ // can't imply
                             /*Refresh fanout gate CEV */
                             //not sure
@@ -391,7 +391,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                                 cout << "Implied." << endl;
                                 fanout->value = nowGate.ptr->value;
                                 modifyList.push_back(fanout);
-                                queue.push_back(ImplacationGate({fanout, FORWARD}));
+                                queue.push_back(ImplicationGate({fanout, FORWARD}));
                             } else{ // can't imply
                                 /*Refresh fanout gate CEV */
                                 //not sure
@@ -419,8 +419,8 @@ void ThresholdNetwork::evalMandatoryAssignments(){
                                 cout << "Implied." <<endl;
                                 fanin.ptr->value = (!fanin.inverter)? 0 : 1;
                                 modifyList.push_back(fanin.ptr);
-                                queue.push_back(ImplacationGate({fanin.ptr, BACKWARD}));
-                                queue.push_back(ImplacationGate({fanin.ptr, FORWARD}));
+                                queue.push_back(ImplicationGate({fanin.ptr, BACKWARD}));
+                                queue.push_back(ImplicationGate({fanin.ptr, FORWARD}));
                             }
                             else {
                                 if ( !fanin.inverter ){
