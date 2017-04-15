@@ -111,7 +111,6 @@ public:
      */
     void checkContollingValueState();
     
-    void exhaustiveEvalCriticalEffectVector();
     const ThresholdInput& getInput(const Gate* target);
     void _Debug_Gate_Information();
     int sideInputControllingValCount;       /*!< sum of number of sideInput's controlling Val*/

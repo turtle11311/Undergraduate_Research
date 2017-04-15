@@ -17,13 +17,6 @@ void Gate::addInput(Gate *input, int thresholdVal, bool phase)
     input->fan_out.push_back(this);
 }
 
-void Gate::exhaustiveEvalCriticalEffectVector(){
-
-
-
-
-}
-
 void Gate::onsetCriticalEffectVector(std::vector<int> curPattern, unsigned int pos, int curWeightSum, int uncheckedSum) {
     if ( pos == curPattern.size() ) return;
     if ( uncheckedSum < thresholdVal - curWeightSum ) return;
@@ -65,6 +58,10 @@ void Gate::evalCriticalEffectVectors()
     onsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
     initialVec.assign(fan_in.size(), 1);
     offsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
+    if ( name == "h" ){
+        cout << onsetTable.size() << endl;
+        cout << offsetTable.size() << endl;
+    }
 }
 
 std::set<Gate*>* Gate::evalDominators()
@@ -146,7 +143,12 @@ void Gate::checkContollingValueState(){
                 break;
             }
         }
-        if ( flag ) fan_in[pos].ctrlVal = 0;
+        if ( flag ) {
+            if ( fan_in[pos].ctrlVal == 1 )
+                fan_in[pos].ctrlVal = 2;
+            else
+                fan_in[pos].ctrlVal = 0;
+        }
         else break;
     }
 }

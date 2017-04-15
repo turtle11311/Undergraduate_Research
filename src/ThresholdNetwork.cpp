@@ -63,7 +63,7 @@ void ThresholdNetwork::evalMandatoryAssignments(){
     std::list<ImplacationGate> queue;
     cout << "evalMandatoryAssignments start." << endl;
     for (Gate* target : targetGateList) {
-        cout << "Target: " << target->name << endl;
+        cout << "Target: " << target->name << " | start."<< endl;
         cout << "Side number： " << target->sideInputs.size() << endl;
         bool hasMA = true;
         /* --------------------imply sideInput value------------------ */
@@ -76,396 +76,421 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         queue.push_back(ImplacationGate({ target, BACKWARD}));
         cout << "Stuck at 0 start." << endl;
         while (!queue.empty() && hasMA) {
-            ImplacationGate nowGate;
-            nowGate.ptr = queue.front().ptr;
-            nowGate.action = queue.front().action;
+            ImplacationGate cur = queue.front();
             queue.pop_front();
-            cout << "current: " << nowGate.ptr->name << endl;
-            cout << ( ( nowGate.action == FORWARD ) ? "FORWARD" : "BACKWARD" )<< endl;
-            if ( nowGate.action == FORWARD ){
-                for (Gate* fanout : nowGate.ptr->fan_out) {
-                    if (fanout->value != -1) {
-                        // fanout's value == 1
-                        if (fanout->value == 1) {
-                            // 1 ctrl input
-                            if (fanout->getInput(nowGate.ptr).ctrlVal == 1) {
-                                // has inverter
-                                if (fanout->getInput(nowGate.ptr).inverter){
-                                    if ((!nowGate.ptr->value) == 0){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
+            cout << "cur: " << cur.ptr->name << " = " << cur.ptr->value  << endl;
+            if ( cur.action == FORWARD ){
+                cout << "FORWARD" << endl;
+                for ( Gate* fanout : cur.ptr->fan_out ){
+                    // check conflict
+                    if ( fanout->value != -1 ){
+                        if ( fanout->getInput(cur.ptr).ctrlVal == 1 ){
+                            if ( !fanout->getInput(cur.ptr).inverter ){
+                                if ( fanout->value == 1 && cur.ptr->value == 0 ){
+                                    hasMA = false;
+                                    break;
                                 }
-                                else{
-                                    if (nowGate.ptr->value == 0){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                            }
-                            else { // 0 ctrl input
-                                if (fanout->getInput(nowGate.ptr).inverter){
-                                    if ((!nowGate.ptr->value) == 0){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                                else{
-                                    if (nowGate.ptr->value == 0){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                            }
-                        } else { // fanout's value == 0
-                            // 1 ctrl input
-                            if ( fanout->getInput(nowGate.ptr).ctrlVal == 1 ){
-                                if (fanout->getInput(nowGate.ptr).inverter){
-                                    if ((!nowGate.ptr->value) == 1){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                                else{
-                                    if (nowGate.ptr->value == 1){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                            }
-                            else{ // 0 ctrl input
-                                if (fanout->getInput(nowGate.ptr).inverter){
-                                    if ((!nowGate.ptr->value) == 1){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                                else{
-                                    if (nowGate.ptr->value == 1){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
+                            } else{
+                                if ( fanout->value == 1 && cur.ptr->value == 1 ){
+                                    hasMA = false;
+                                    break;
                                 }
                             }
                         }
-                        queue.push_back(ImplacationGate({ fanout, BACKWARD }));
-                        continue;
-                    }
-                    // Have three states: no ctrlVal, same ctrlVal and not same ctrlVal
-                    if (fanout->getInput(nowGate.ptr).ctrlVal == -1) {
-                        // DO NOTHING
-                    } else {
-                        int complement = !nowGate.ptr->value;
-                        if ( fanout->getInput(nowGate.ptr).inverter ){
-                            if (fanout->getInput(nowGate.ptr).ctrlVal == complement) {
-                                cout << "Implied." << endl;
-                                fanout->value = complement;
-                                modifyList.push_back(fanout);
-                                queue.push_back(ImplacationGate({fanout, FORWARD}));
-                            } else{ // can't imply
-                            /*Refresh fanout gate CEV */
-                            //not sure
-                            //fanout->thresholdVal -= fanout->getInput(nowGate.ptr).weight;
-                            //fanout->getInput(nowGate.ptr).weight = 0;
-                            //fanout->evalCriticalEffectVectors();
-                            //fanout->checkContollingValueState(0);
-                            //fanout->checkContollingValueState(1);
-                            /*should do something,
-                            put this fanout into queue, or put current gate into queue again?*/
+                        else if ( fanout->getInput(cur.ptr).ctrlVal == 0 ){
+                            if ( !fanout->getInput(cur.ptr).inverter ){
+                                if ( fanout->value == 0 && cur.ptr->value == 1 ){
+                                    hasMA = false;
+                                    break;
+                                }
+                            } else{
+                                if ( fanout->value == 0 && cur.ptr->value == 0 ){
+                                    hasMA = false;
+                                    break;
+                                }
                             }
-                        } else {
-                            if (fanout->getInput(nowGate.ptr).ctrlVal == nowGate.ptr->value) {
-                                cout << "Implied." << endl;
-                                fanout->value = nowGate.ptr->value;
+                        }
+                    }
+                    else{
+                        cout << "\tcur->fanout: " << fanout->name << endl;
+                        if ( fanout->getInput(cur.ptr).ctrlVal == 1 ){
+                            cout << "\t\tctrl1" << endl;
+                            if ( !fanout->getInput(cur.ptr).inverter ){
+                                cout << "\t\t\tno inverter" << endl;
+                                if ( cur.ptr->value == 0 ){
+                                    cout << "\t\t\t\tcur->val = 0" << endl;;
+                                    fanout->value = 0;
+                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
+                            }
+                            else{
+                                cout << "\t\t\thas inverter" << endl;
+                                if ( cur.ptr->value == 1 ){
+                                    cout << "\t\t\t\tcur->val = 1" << endl;;
+                                    fanout->value = 0;
+                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
+                            }
+                        }
+                        else if ( fanout->getInput(cur.ptr).ctrlVal == 0 ){
+                            cout << "\t\tctrl0" << endl;
+                            if ( !fanout->getInput(cur.ptr).inverter ){
+                                cout << "\t\t\tno inverter" << endl;
+                                if ( cur.ptr->value == 1 ){
+                                    cout << "\t\t\t\tcur->val = 1" << endl;;
+                                    fanout->value = 1;
+                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
+                            }
+                            else{
+                                cout << "\t\t\thas inverter" << endl;
+                                if ( cur.ptr->value == 0 ){
+                                    cout << "\t\t\t\tcur->val = 0" << endl;;
+                                    fanout->value = 1;
+                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
+                            }
+                        }
+                        else if ( fanout->getInput(cur.ptr).ctrlVal == 2 ){
+                            if ( !fanout->getInput(cur.ptr).inverter ){
+                                fanout->value = cur.ptr->value;
+                                queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                queue.push_back(ImplacationGate({fanout,BACKWARD}));
                                 modifyList.push_back(fanout);
-                                queue.push_back(ImplacationGate({fanout, FORWARD}));
-                            } else{ // can't imply
-                                /*Refresh fanout gate CEV */
-                                //not sure
-                                //fanout->thresholdVal -= fanout->getInput(nowGate.ptr).weight;
-                                //fanout->getInput(nowGate.ptr).weight = 0;
-                                //fanout->evalCriticalEffectVectors();
-                                //fanout->checkContollingValueState(0);
-                                //fanout->checkContollingValueState(1);
-                                /*should do something,
-                                put this fanout into queue, or put current gate into queue again?*/
+                            }
+                            else{
+                                fanout->value = !cur.ptr->value;
+                                queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                queue.push_back(ImplacationGate({fanout,BACKWARD}));
+                                modifyList.push_back(fanout);
                             }
                         }
                     }
                 }
             }
-            else if ( nowGate.action == BACKWARD ){
-                // if nowGate have been Refresh the cevtable, should be put into queue again
-                //bool doBackwardAgain = false;
-                for (auto &fanin : nowGate.ptr->fan_in) {
-                    if (nowGate.ptr->value == 0) {
-                        // this fanin
-                        if (fanin.ctrlVal != -1) {
-                            // this fanin has value
-                            if (fanin.ptr->value == -1) {
-                                cout << "Implied." <<endl;
-                                fanin.ptr->value = (!fanin.inverter)? 0 : 1;
+            else if ( cur.action == BACKWARD ){
+                cout << "BACKWARD" << endl;
+                for ( auto& fanin : cur.ptr->fan_in ){
+                    //check conflict
+                    cout << "\tcur->fanin: " << fanin.ptr->name << endl;
+                    if ( fanin.ptr->value != -1 ){
+                        if ( fanin.ctrlVal == 1 ){
+                            if ( !fanin.inverter ){
+                                if ( cur.ptr->value == 1 && fanin.ptr->value == 0){
+                                    hasMA = false;
+                                    break;
+                                }
+                            }else {
+                                if ( cur.ptr->value == 1 && fanin.ptr->value == 1){
+                                    hasMA = false;
+                                    break;
+                                }
+                            }
+                        }
+                        else if ( fanin.ctrlVal == 0 ){
+                            if ( !fanin.inverter ){
+                                if ( cur.ptr->value == 0 && fanin.ptr->value == 1){
+                                    hasMA = false;
+                                    break;
+                                }
+                            }else {
+                                if ( cur.ptr->value == 0 && fanin.ptr->value == 0){
+                                    hasMA = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        if ( fanin.ctrlVal == 1 ){
+                            cout << "\t\tctrl1" << endl;
+                            if ( !fanin.inverter ){
+                                cout << "\t\t\tno inverter" << endl;
+                                if ( cur.ptr->value == 1 ){
+                                    cout << "\t\t\tcur->val = 1" << endl;
+                                    fanin.ptr->value = 1;
+                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
+                                    modifyList.push_back(fanin.ptr);
+                                }
+                            }else {
+                                cout << "\t\t\thas inverter" << endl;
+                                if ( cur.ptr->value == 1 ){
+                                    cout << "\t\t\tcur->val = 1" << endl;
+                                    fanin.ptr->value = 0;
+                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
+                                    modifyList.push_back(fanin.ptr);
+                                }
+                            }
+                        }
+                        else if ( fanin.ctrlVal == 0 ){
+                            cout << "\t\tctrl0" << endl;
+                            if ( !fanin.inverter ){
+                                cout << "\t\t\tno inverter" << endl;
+                                if ( cur.ptr->value == 0 ){
+                                    cout << "\t\t\tcur->val = 0" << endl;
+                                    fanin.ptr->value = 0;
+                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
+                                    modifyList.push_back(fanin.ptr);
+                                }
+                            }else {
+                                cout << "\t\t\thas inverter" << endl;
+                                if ( cur.ptr->value == 0 ){
+                                    cout << "\t\t\tcur->val = 0" << endl;
+                                    fanin.ptr->value = 1;
+                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
+                                    modifyList.push_back(fanin.ptr);
+                                }
+                            }
+                        }
+                        else if ( fanin.ctrlVal == 2 ){
+                            if ( !fanin.inverter ){
+                                fanin.ptr->value = cur.ptr->value;
+                                queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
-                                queue.push_back(ImplacationGate({fanin.ptr, BACKWARD}));
-                                queue.push_back(ImplacationGate({fanin.ptr, FORWARD}));
                             }
-                            else {
-                                if ( !fanin.inverter ){
-                                    // check conflict
-                                    if (fanin.ptr->value == 1) {
-                                        hasMA = false;
-                                        queue.clear();
-                                        // add flag
-                                    }
-                                    else{ // Refresh cevtable
-                                        // nowGate->thresholdVal -= fanin.weight;
-                                        // fanin.weight = 0;
-                                        // nowGate->evalCriticalEffectVectors();
-                                        // nowGate->checkContollingValueState(0);
-                                        // nowGate->checkContollingValueState(1);
-                                        // doBackwardAgain = true;
-                                    }
-                                }
-                                else {
-                                    if (fanin.ptr->value == 0) {
-                                        hasMA = false;
-                                        queue.clear();
-                                        // add flag
-                                    }
-                                    else{
-                                        // nowGate->thresholdVal -= fanin.weight;
-                                        // fanin.weight = 0;
-                                        // nowGate->evalCriticalEffectVectors();
-                                        // nowGate->checkContollingValueState(0);
-                                        // nowGate->checkContollingValueState(1);
-                                        // doBackwardAgain = true;
-                                    }
-                                }
+                            else{
+                                fanin.ptr->value = !cur.ptr->value;
+                                queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
+                                modifyList.push_back(fanin.ptr);
                             }
                         }
                     }
-                    //else if(nowGate.ptr->value == 1)
-                    else {
-                        // indirect imply
-                    }
                 }
-                //queue.push_back(ImplacationGate({nowGate.ptr,BACKWARD}));
-            }
-            else {
             }
         }
+
+        /* ------------------------reset modified gate------------------------ */
         MA0.insert(modifyList.begin(), modifyList.end());
         for (Gate* gate : modifyList) {
             cout << gate->name << ": " << gate->value << " ";
             gate->value = -1;
         }
         cout << endl;
-        if ( !hasMA ) cout << "noMA" << endl;
+        if ( !hasMA ) cout << "noMA0" << endl;
         modifyList.clear();
 
         hasMA = true;
         queue.clear();
-        /* ------------------------stuck at 0------------------------ */
+        /* ------------------------stuck at 1------------------------ */
         target->value = 0;
         modifyList.push_back(target);
         queue.push_back(ImplacationGate({ target, FORWARD}));
         queue.push_back(ImplacationGate({ target, BACKWARD}));
         cout << "Stuck at 1 start." << endl;
+
         while (!queue.empty() && hasMA) {
-            ImplacationGate nowGate;
-            nowGate.ptr = queue.front().ptr;
-            nowGate.action = queue.front().action;
+            ImplacationGate cur = queue.front();
             queue.pop_front();
-            cout << "current: " << nowGate.ptr->name << endl;
-            cout << ( ( nowGate.action == FORWARD ) ? "FORWARD" : "BACKWARD" )<< endl;
-            if ( nowGate.action == FORWARD ){
-                for (Gate* fanout : nowGate.ptr->fan_out) {
-                    if (fanout->value != -1) {
-                        // fanout's value == 1
-                        if (fanout->value == 1) {
-                            // 1 ctrl input
-                            if (fanout->getInput(nowGate.ptr).ctrlVal == 1) {
-                                // has inverter
-                                if (fanout->getInput(nowGate.ptr).inverter){
-                                    if ((!nowGate.ptr->value) == 0){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
+            cout << "cur: " << cur.ptr->name << " = " << cur.ptr->value  << endl;
+            if ( cur.action == FORWARD ){
+                cout << "FORWARD" << endl;
+                for ( Gate* fanout : cur.ptr->fan_out ){
+                    // check conflict
+                    if ( fanout->value != -1 ){
+                        if ( fanout->getInput(cur.ptr).ctrlVal == 1 ){
+                            if ( !fanout->getInput(cur.ptr).inverter ){
+                                if ( fanout->value == 1 && cur.ptr->value == 0 ){
+                                    hasMA = false;
+                                    break;
                                 }
-                                else{
-                                    if (nowGate.ptr->value == 0){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                            }
-                            else { // 0 ctrl input
-                                if (fanout->getInput(nowGate.ptr).inverter){
-                                    if ((!nowGate.ptr->value) == 0){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                                else{
-                                    if (nowGate.ptr->value == 0){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                            }
-                        } else { // fanout's value == 0
-                            // 1 ctrl input
-                            if ( fanout->getInput(nowGate.ptr).ctrlVal == 1 ){
-                                if (fanout->getInput(nowGate.ptr).inverter){
-                                    if ((!nowGate.ptr->value) == 1){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                                else{
-                                    if (nowGate.ptr->value == 1){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                            }
-                            else{ // 0 ctrl input
-                                if (fanout->getInput(nowGate.ptr).inverter){
-                                    if ((!nowGate.ptr->value) == 1){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
-                                }
-                                else{
-                                    if (nowGate.ptr->value == 1){
-                                        hasMA = false;
-                                        queue.clear();
-                                        break;
-                                    }
+                            } else{
+                                if ( fanout->value == 1 && cur.ptr->value == 1 ){
+                                    hasMA = false;
+                                    break;
                                 }
                             }
                         }
-                        queue.push_back(ImplacationGate({ fanout, BACKWARD }));
-                        continue;
-                    }
-                    // Have three states: no ctrlVal, same ctrlVal and not same ctrlVal
-                    if (fanout->getInput(nowGate.ptr).ctrlVal == -1) {
-                        // DO NOTHING
-                    } else {
-                        int complement = !nowGate.ptr->value;
-                        if ( fanout->getInput(nowGate.ptr).inverter ){
-                            if (fanout->getInput(nowGate.ptr).ctrlVal == complement) {
-                                cout << "Implied." << endl;
-                                fanout->value = complement;
-                                modifyList.push_back(fanout);
-                                queue.push_back(ImplacationGate({fanout, FORWARD}));
-                            } else{ // can't imply
-                            /*Refresh fanout gate CEV */
-                            //not sure
-                            //fanout->thresholdVal -= fanout->getInput(nowGate.ptr).weight;
-                            //fanout->getInput(nowGate.ptr).weight = 0;
-                            //fanout->evalCriticalEffectVectors();
-                            //fanout->checkContollingValueState(0);
-                            //fanout->checkContollingValueState(1);
-                            /*should do something,
-                            put this fanout into queue, or put current gate into queue again?*/
+                        else if ( fanout->getInput(cur.ptr).ctrlVal == 0 ){
+                            if ( !fanout->getInput(cur.ptr).inverter ){
+                                if ( fanout->value == 0 && cur.ptr->value == 1 ){
+                                    hasMA = false;
+                                    break;
+                                }
+                            } else{
+                                if ( fanout->value == 0 && cur.ptr->value == 0 ){
+                                    hasMA = false;
+                                    break;
+                                }
                             }
-                        } else {
-                            if (fanout->getInput(nowGate.ptr).ctrlVal == nowGate.ptr->value) {
-                                cout << "Implied." << endl;
-                                fanout->value = nowGate.ptr->value;
+                        }
+                    }
+                    else{
+                        cout << "\tcur->fanout: " << fanout->name << endl;
+                        if ( fanout->getInput(cur.ptr).ctrlVal == 1 ){
+                            cout << "\t\tctrl1" << endl;
+                            if ( !fanout->getInput(cur.ptr).inverter ){
+                                cout << "\t\t\tno inverter" << endl;
+                                if ( cur.ptr->value == 0 ){
+                                    cout << "\t\t\t\tcur->val = 0" << endl;;
+                                    fanout->value = 0;
+                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
+                            }
+                            else{
+                                cout << "\t\t\thas inverter" << endl;
+                                if ( cur.ptr->value == 1 ){
+                                    cout << "\t\t\t\tcur->val = 1" << endl;;
+                                    fanout->value = 0;
+                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
+                            }
+                        }
+                        else if ( fanout->getInput(cur.ptr).ctrlVal == 0 ){
+                            cout << "\t\tctrl0" << endl;
+                            if ( !fanout->getInput(cur.ptr).inverter ){
+                                cout << "\t\t\tno inverter" << endl;
+                                if ( cur.ptr->value == 1 ){
+                                    cout << "\t\t\t\tcur->val = 1" << endl;;
+                                    fanout->value = 1;
+                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
+                            }
+                            else{
+                                cout << "\t\t\thas inverter" << endl;
+                                if ( cur.ptr->value == 0 ){
+                                    cout << "\t\t\t\tcur->val = 0" << endl;;
+                                    fanout->value = 1;
+                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
+                            }
+                        }
+                        else if ( fanout->getInput(cur.ptr).ctrlVal == 2 ){
+                            if ( !fanout->getInput(cur.ptr).inverter ){
+                                fanout->value = cur.ptr->value;
+                                queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                queue.push_back(ImplacationGate({fanout,BACKWARD}));
                                 modifyList.push_back(fanout);
-                                queue.push_back(ImplacationGate({fanout, FORWARD}));
-                            } else{ // can't imply
-                                /*Refresh fanout gate CEV */
-                                //not sure
-                                //fanout->thresholdVal -= fanout->getInput(nowGate.ptr).weight;
-                                //fanout->getInput(nowGate.ptr).weight = 0;
-                                //fanout->evalCriticalEffectVectors();
-                                //fanout->checkContollingValueState(0);
-                                //fanout->checkContollingValueState(1);
-                                /*should do something,
-                                put this fanout into queue, or put current gate into queue again?*/
+                            }
+                            else{
+                                fanout->value = !cur.ptr->value;
+                                queue.push_back(ImplacationGate({fanout,FORWARD}));
+                                queue.push_back(ImplacationGate({fanout,BACKWARD}));
+                                modifyList.push_back(fanout);
                             }
                         }
                     }
                 }
             }
-            else if ( nowGate.action == BACKWARD ){
-                // if nowGate have been Refresh the cevtable, should be put into queue again
-                //bool doBackwardAgain = false;
-                for (auto &fanin : nowGate.ptr->fan_in) {
-                    if (nowGate.ptr->value == 0) {
-                        // this fanin
-                        if (fanin.ctrlVal != -1) {
-                            // this fanin has value
-                            if (fanin.ptr->value == -1) {
-                                cout << "Implied." <<endl;
-                                fanin.ptr->value = (!fanin.inverter)? 0 : 1;
+            else if ( cur.action == BACKWARD ){
+                cout << "BACKWARD" << endl;
+                for ( auto& fanin : cur.ptr->fan_in ){
+                    //check conflict
+                    cout << "\tcur->fanin: " << fanin.ptr->name << endl;
+                    if ( fanin.ptr->value != -1 ){
+                        if ( fanin.ctrlVal == 1 ){
+                            if ( !fanin.inverter ){
+                                if ( cur.ptr->value == 1 && fanin.ptr->value == 0){
+                                    hasMA = false;
+                                    break;
+                                }
+                            }else {
+                                if ( cur.ptr->value == 1 && fanin.ptr->value == 1){
+                                    hasMA = false;
+                                    break;
+                                }
+                            }
+                        }
+                        else if ( fanin.ctrlVal == 0 ){
+                            if ( !fanin.inverter ){
+                                if ( cur.ptr->value == 0 && fanin.ptr->value == 1){
+                                    hasMA = false;
+                                    break;
+                                }
+                            }else {
+                                if ( cur.ptr->value == 0 && fanin.ptr->value == 0){
+                                    hasMA = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        if ( fanin.ctrlVal == 1 ){
+                            cout << "\t\tctrl1" << endl;
+                            if ( !fanin.inverter ){
+                                cout << "\t\t\tno inverter" << endl;
+                                if ( cur.ptr->value == 1 ){
+                                    cout << "\t\t\tcur->val = 1" << endl;
+                                    fanin.ptr->value = 1;
+                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
+                                    modifyList.push_back(fanin.ptr);
+                                }
+                            }else {
+                                cout << "\t\t\thas inverter" << endl;
+                                if ( cur.ptr->value == 1 ){
+                                    cout << "\t\t\tcur->val = 1" << endl;
+                                    fanin.ptr->value = 0;
+                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
+                                    modifyList.push_back(fanin.ptr);
+                                }
+                            }
+                        }
+                        else if ( fanin.ctrlVal == 0 ){
+                            cout << "\t\tctrl0" << endl;
+                            if ( !fanin.inverter ){
+                                cout << "\t\t\tno inverter" << endl;
+                                if ( cur.ptr->value == 0 ){
+                                    cout << "\t\t\tcur->val = 0" << endl;
+                                    fanin.ptr->value = 0;
+                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
+                                    modifyList.push_back(fanin.ptr);
+                                }
+                            }else {
+                                cout << "\t\t\thas inverter" << endl;
+                                if ( cur.ptr->value == 0 ){
+                                    cout << "\t\t\tcur->val = 0" << endl;
+                                    fanin.ptr->value = 1;
+                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
+                                    modifyList.push_back(fanin.ptr);
+                                }
+                            }
+                        }
+                        else if ( fanin.ctrlVal == 2 ){
+                            if ( !fanin.inverter ){
+                                fanin.ptr->value = cur.ptr->value;
+                                queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
-                                queue.push_back(ImplacationGate({fanin.ptr, BACKWARD}));
-                                queue.push_back(ImplacationGate({fanin.ptr, FORWARD}));
                             }
-                            else {
-                                if ( !fanin.inverter ){
-                                    // check conflict
-                                    if (fanin.ptr->value == 1) {
-                                        hasMA = false;
-                                        queue.clear();
-                                        // add flag
-                                    }
-                                    else{ // Refresh cevtable
-                                        // nowGate->thresholdVal -= fanin.weight;
-                                        // fanin.weight = 0;
-                                        // nowGate->evalCriticalEffectVectors();
-                                        // nowGate->checkContollingValueState(0);
-                                        // nowGate->checkContollingValueState(1);
-                                        // doBackwardAgain = true;
-                                    }
-                                }
-                                else {
-                                    if (fanin.ptr->value == 0) {
-                                        hasMA = false;
-                                        queue.clear();
-                                        // add flag
-                                    }
-                                    else{
-                                        // nowGate->thresholdVal -= fanin.weight;
-                                        // fanin.weight = 0;
-                                        // nowGate->evalCriticalEffectVectors();
-                                        // nowGate->checkContollingValueState(0);
-                                        // nowGate->checkContollingValueState(1);
-                                        // doBackwardAgain = true;
-                                    }
-                                }
+                            else{
+                                fanin.ptr->value = !cur.ptr->value;
+                                queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
+                                queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
+                                modifyList.push_back(fanin.ptr);
                             }
                         }
                     }
-                    //else if(nowGate.ptr->value == 1)
-                    else {
-                        // indirect imply
-                    }
                 }
-                //queue.push_back(ImplacationGate({nowGate.ptr,BACKWARD}));
-            }
-            else {
             }
         }
+
+        /* ------------------------reset modified gate------------------------ */
         MA1.insert(modifyList.begin(), modifyList.end());
         for (Gate* gate : modifyList) {
             cout << gate->name << ": " << gate->value << " ";
@@ -474,25 +499,27 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         cout << endl;
         modifyList.clear();
 
-        if ( !hasMA ) cout << "noMA" << endl;
+        if ( !hasMA ) cout << "noMA1" << endl;
         sideInputModifyList.clear();
+
+        cout << "Target: " << target->name << " | end."<< endl << endl;
     }
 }
 
 void ThresholdNetwork::implySideInputVal(Gate* target, Gate* sideInput ){
 
-    cout << "Side Input: " << sideInput->name << endl;
+    //cout << "Side Input: " << sideInput->name << endl;
     for ( Gate* fanout : sideInput->fan_out ){
         // if sideInput's fanout in target's fanoutCone
         if ( target->fanoutCone.find(fanout) != target->fanoutCone.end() ){
-            if ( fanout->getInput(sideInput).ctrlVal != -1 ){
-                cout << "Dominator: " << fanout->name << endl;
+            //cout << "Dominator: " << fanout->name << endl;
+            if ( fanout->getInput(sideInput).ctrlVal == 1 || fanout->getInput(sideInput).ctrlVal == 0  ){
                 if ( !fanout->getInput(sideInput).inverter )
-                    sideInput->value = !fanout->getInput(sideInput).ctrlVal;
-                else
                     sideInput->value = fanout->getInput(sideInput).ctrlVal;
-                sideInputModifyList.push_back(sideInput);
+                else
+                    sideInput->value = !fanout->getInput(sideInput).ctrlVal;
             }
+            sideInputModifyList.push_back(sideInput);
         }
     }
 }
