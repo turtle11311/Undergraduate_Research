@@ -9,6 +9,10 @@
 using std::cout;
 using std::endl;
 
+
+ThresholdNetwork::ThresholdNetwork(){
+}
+
 Gate* ThresholdNetwork::accessGateByName(const char *const name)
 {
     GateDict::iterator gateIt = gatePool.find(name);
@@ -26,8 +30,7 @@ void ThresholdNetwork::foreachGateAttr()
     for (auto &gate : gatePool) {
         gate.second->evalSideInput();
         gate.second->evalCriticalEffectVectors();
-        gate.second->checkContollingValueState(1);
-        gate.second->checkContollingValueState(0);
+        gate.second->checkContollingValueState();
     }
 }
 
@@ -49,32 +52,28 @@ void ThresholdNetwork::_Debug_Wiring(){
 
 
 void ThresholdNetwork::evalMandatoryAssignments(){
-    /*-----------------------------------------------------------
-    add inverter
-    side input assign value
-    each gate find MA
-    side input, side input implied MA reuse
-    -----------------------------------------------------------*/
     std::set<Gate*> MA0;
     std::set<Gate*> MA1;
+    /* --------------------------collect target------------------------ */
     for (auto gate : gatePool) {
         if (!gate.second->sideInputs.empty())
             targetGateList.push_back(gate.second);
     }
+    /* ------------iteratively eval mandotoryAssignments--------------- */
     std::list<ImplacationGate> queue;
     cout << "evalMandatoryAssignments start." << endl;
     for (Gate* target : targetGateList) {
         cout << "Target: " << target->name << endl;
+        cout << "Side number： " << target->sideInputs.size() << endl;
         bool hasMA = true;
-        std::list<Gate*> modifyList;
-        // Stuck at 0
+        /* --------------------imply sideInput value------------------ */
+        for ( Gate* sideInput : target->sideInputs )
+            implySideInputVal( target, sideInput );
+        /* ------------------------stuck at 0------------------------ */
         target->value = 1;
-        ImplacationGate impGate;
-        impGate.ptr = target;
-        impGate.action = FORWARD;
-        queue.push_back(impGate);
-        impGate.action = BACKWARD;
-        queue.push_back(impGate);
+        modifyList.push_back(target);
+        queue.push_back(ImplacationGate({ target, FORWARD}));
+        queue.push_back(ImplacationGate({ target, BACKWARD}));
         cout << "Stuck at 0 start." << endl;
         while (!queue.empty() && hasMA) {
             ImplacationGate nowGate;
@@ -274,11 +273,11 @@ void ThresholdNetwork::evalMandatoryAssignments(){
 
         hasMA = true;
         queue.clear();
-        // Stuck at 1
+        /* ------------------------stuck at 0------------------------ */
         target->value = 0;
+        modifyList.push_back(target);
         queue.push_back(ImplacationGate({ target, FORWARD}));
         queue.push_back(ImplacationGate({ target, BACKWARD}));
-
         cout << "Stuck at 1 start." << endl;
         while (!queue.empty() && hasMA) {
             ImplacationGate nowGate;
@@ -474,7 +473,27 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         }
         cout << endl;
         modifyList.clear();
+
         if ( !hasMA ) cout << "noMA" << endl;
+        sideInputModifyList.clear();
+    }
+}
+
+void ThresholdNetwork::implySideInputVal(Gate* target, Gate* sideInput ){
+
+    cout << "Side Input: " << sideInput->name << endl;
+    for ( Gate* fanout : sideInput->fan_out ){
+        // if sideInput's fanout in target's fanoutCone
+        if ( target->fanoutCone.find(fanout) != target->fanoutCone.end() ){
+            if ( fanout->getInput(sideInput).ctrlVal != -1 ){
+                cout << "Dominator: " << fanout->name << endl;
+                if ( !fanout->getInput(sideInput).inverter )
+                    sideInput->value = !fanout->getInput(sideInput).ctrlVal;
+                else
+                    sideInput->value = fanout->getInput(sideInput).ctrlVal;
+                sideInputModifyList.push_back(sideInput);
+            }
+        }
     }
 }
 

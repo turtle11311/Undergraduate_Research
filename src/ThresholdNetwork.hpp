@@ -10,6 +10,7 @@
 #pragma once
 #include "Gate.hpp"
 #include <map>
+#include <list>
 /*!
  * \typedef std::map<std::string, Gate*> GateDict
  * A storage support quick query by the name
@@ -33,7 +34,14 @@ private:
     Gate start;                             /*!< pseudo gate for all pi's fanin*/
     Gate end;                               /*!< pseudo gate for all po's fanout*/
     std::vector<Gate*> targetGateList;
+    std::list<Gate*> modifyList;
+    std::list<Gate*> sideInputModifyList;
 public:
+    /*!
+     * \fn ThresholdNetwork()
+     * \brief Constructor
+     */
+    ThresholdNetwork();
     /*!
      * \fn Gate* accessGateByName(const char* const name)
      * \param name name for new gate
@@ -52,8 +60,11 @@ public:
      * \brief generate essentail attribute for logic sythesis
      * evaluate dominators, CEVs, FanoutCone and side inputs for each gates in this network
      */
-    void evalMandatoryAssignments();
     void foreachGateAttr();
+
+    void evalMandatoryAssignments();
+
+    void implySideInputVal(Gate*,Gate*);
     void _Debug_Wiring();
     void _Debug_Onset_Critical_Effect_Vector();
     void _Debug_Controlling_Value();

@@ -107,14 +107,14 @@ public:
     void evalSideInput();
     /*!
      * \fn void checkContollingValueState()
-     * \param 0-cev or 1-cev mode
      * \brief check the 0-cev & 1-cev to get the controlling value state
      */
-    void checkContollingValueState( int mode );
-
+    void checkContollingValueState();
+    
+    void exhaustiveEvalCriticalEffectVector();
     const ThresholdInput& getInput(const Gate* target);
     void _Debug_Gate_Information();
-    int sideInputControllingValCount;       /*!< sum of number of sidInput's controlling Val*/
+    int sideInputControllingValCount;       /*!< sum of number of sideInput's controlling Val*/
     int thresholdVal;                       /*!< Threshold value of this gate */
     GateType type;                          /*!< Type of the gate*/
     std::string name;                       /*!< Name of the gate */
