@@ -17,7 +17,9 @@
  */
 typedef std::map<std::string, Gate*> GateDict;
 
-struct ImplacationGate {
+enum ImplicationType { FORWARD, BACKWARD };
+
+struct ImplicationGate {
     Gate *ptr;
     ImplicationType action;
 };

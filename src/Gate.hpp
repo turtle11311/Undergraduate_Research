@@ -23,7 +23,6 @@ class Gate;
 * Forth(3) Internal mean the gate has both fanin & fanout
 */
 enum GateType { Constant, PI, PO, Internal };
-enum ImplicationType { FORWARD, BACKWARD };
 /*!
 * \typedef std::vector<std::vector<int>> PatternTable
 * Storage of onset/offset critical effect vectors
@@ -77,13 +76,13 @@ public:
     */
     void onsetCriticalEffectVector(std::vector<int> curPattern, unsigned int pos, int curWeightSum, int uncheckedSum);
     /*!
-    * \fn void offsetCriticalEffectVector(std::vector<int> curPattern, int pos, int uncheckedSum)
-    * \param current fan_in pattern
-    * \param the check bit
-    * \param current checked bits' weight sum
-    * \param the unchecked bits' weight sum
-    * \brief a recursive function to find all the "Offset Critical Effect Vector"
-    */
+     * \fn void offsetCriticalEffectVector(std::vector<int> curPattern, int pos, int uncheckedSum)
+     * \param current fan_in pattern
+     * \param the check bit
+     * \param current checked bits' weight sum
+     * \param the unchecked bits' weight sum
+     * \brief a recursive function to find all the "Offset Critical Effect Vector"
+     */
     void offsetCriticalEffectVector(std::vector<int> curPattern, unsigned int pos, int curWeightSum, int uncheckedSum);
     /*!
      * \fn evalDominators()
