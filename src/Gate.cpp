@@ -17,6 +17,13 @@ void Gate::addInput(Gate *input, int thresholdVal, bool phase)
     input->fan_out.push_back(this);
 }
 
+void Gate::exhaustiveEvalCriticalEffectVector(){
+
+
+
+
+}
+
 void Gate::onsetCriticalEffectVector(std::vector<int> curPattern, unsigned int pos, int curWeightSum, int uncheckedSum) {
     if ( pos == curPattern.size() ) return;
     if ( uncheckedSum < thresholdVal - curWeightSum ) return;
@@ -117,30 +124,30 @@ void Gate::evalSideInput()
     }
 }
 
-void Gate::checkContollingValueState( int mode ){
-    auto& table = mode ? onsetTable : offsetTable;
-    for ( unsigned int i = 0 ; i < table.size() ; ++i ){
-        int index = -1;
-        for ( unsigned int j = 0 ; j < table[i].size() ; ++j ){
-            if ( table[i][j] == mode ){
-                if ( index == -1 ){
-                    index = j;
-                }
-                else {
-                    index = -1;
-                    break;
-                }
+void Gate::checkContollingValueState(){
+    // check onsetTable
+    for ( int pos = 0 ; pos < fan_in.size() ; ++pos  ){
+        bool flag = true;
+        for ( int i = 0; i < onsetTable.size() ; ++i ){
+            if ( onsetTable[i][pos] == 0 ){
+                flag = false;
+                break;
             }
         }
-        if ( index != -1 ) {
-            if ( fan_in[index].ctrlVal != -1 ) {
-                fan_in[index].ctrlVal = 2;
+        if ( flag ) fan_in[pos].ctrlVal = 1;
+        else break;
+    }
+    // check offsetTable
+    for ( int pos = 0 ; pos < fan_in.size() ; ++pos  ){
+        bool flag = true;
+        for ( int i = 0; i < offsetTable.size() ; ++i ){
+            if ( offsetTable[i][pos] == 1 ){
+                flag = false;
+                break;
             }
-            else {
-                fan_in[index].ctrlVal = mode;
-            }
-            ++sideInputControllingValCount;
         }
+        if ( flag ) fan_in[pos].ctrlVal = 0;
+        else break;
     }
 }
 
