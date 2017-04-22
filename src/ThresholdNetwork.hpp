@@ -24,6 +24,14 @@ struct ImplicationGate {
     ImplicationType action;
 };
 
+struct GateWithValue {
+    Gate* ptr;
+    int value;
+    bool operator<(const GateWithValue& rhs) const {
+        return ptr < rhs.ptr;
+    }
+};
+
 class ThresholdNetworkDebugger;
 /*!
  * \class ThresholdNetwork ThresholdNetwork.hpp
@@ -36,8 +44,8 @@ private:
     Gate start;                             /*!< pseudo gate for all pi's fanin*/
     Gate end;                               /*!< pseudo gate for all po's fanout*/
     std::vector<Gate*> targetGateList;
-    std::list<Gate*> modifyList;
-    std::list<Gate*> sideInputModifyList;
+    std::list<ImplicationGate> queue;
+    std::vector<Gate*> modifyList;
 public:
     /*!
      * \fn ThresholdNetwork()
@@ -67,6 +75,8 @@ public:
     void evalMandatoryAssignments();
 
     void implySideInputVal(Gate*,Gate*);
+
+    std::set<GateWithValue> iterativeImplication( Gate*);
     void _Debug_Wiring();
     void _Debug_Onset_Critical_Effect_Vector();
     void _Debug_Controlling_Value();

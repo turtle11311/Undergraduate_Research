@@ -50,476 +50,245 @@ void ThresholdNetwork::_Debug_Wiring(){
     }
 }
 
+std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
+    std::set<GateWithValue> MASet;
+    MASet.insert(GateWithValue({target,target->value}));
+    int pos = modifyList.size();
+    cout << "Target: " << target->name << " | start."<< endl;
+    cout << "Side number： " << target->sideInputs.size() << endl;
+    bool hasMA = true;
+    while (!queue.empty() && hasMA) {
+        ImplicationGate cur = queue.front();
+        queue.pop_front();
+        cout << "cur: " << cur.ptr->name << " = " << cur.ptr->value  << endl;
+        if ( cur.action == FORWARD ){
+            cout << "FORWARD" << endl;
+            for ( Gate* fanout : cur.ptr->fan_out ){
+                if ( fanout->type == PO )
+                    continue;
+                // check conflict
+                if ( fanout->value != -1 ){
+                    if ( fanout->getInput(cur.ptr).ctrlVal == 1 ){
+                        if ( !fanout->getInput(cur.ptr).inverter ){
+                            if ( fanout->value == 1 && cur.ptr->value == 0 ){
+                                hasMA = false;
+                                break;
+                            }
+                        } else{
+                            if ( fanout->value == 1 && cur.ptr->value == 1 ){
+                                hasMA = false;
+                                break;
+                            }
+                        }
+                    }
+                    else if ( fanout->getInput(cur.ptr).ctrlVal == 0 ){
+                        if ( !fanout->getInput(cur.ptr).inverter ){
+                            if ( fanout->value == 0 && cur.ptr->value == 1 ){
+                                hasMA = false;
+                                break;
+                            }
+                        } else{
+                            if ( fanout->value == 0 && cur.ptr->value == 0 ){
+                                hasMA = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else{
+                    cout << "\tcur->fanout: " << fanout->name << endl;
+                    if ( fanout->getInput(cur.ptr).ctrlVal == 1 ){
+                        cout << "\t\tctrl1" << endl;
+                        if ( !fanout->getInput(cur.ptr).inverter ){
+                            cout << "\t\t\tno inverter" << endl;
+                            if ( cur.ptr->value == 0 ){
+                                cout << "\t\t\t\tcur->val = 0" << endl;;
+                                fanout->value = 0;
+                                queue.push_back(ImplicationGate({fanout,FORWARD}));
+                                queue.push_back(ImplicationGate({fanout,BACKWARD}));
+                                modifyList.push_back(fanout);
+                            }
+                        }
+                        else{
+                            cout << "\t\t\thas inverter" << endl;
+                            if ( cur.ptr->value == 1 ){
+                                cout << "\t\t\t\tcur->val = 1" << endl;;
+                                fanout->value = 0;
+                                queue.push_back(ImplicationGate({fanout,FORWARD}));
+                                queue.push_back(ImplicationGate({fanout,BACKWARD}));
+                                modifyList.push_back(fanout);
+                            }
+                        }
+                    }
+                    else if ( fanout->getInput(cur.ptr).ctrlVal == 0 ){
+                        cout << "\t\tctrl0" << endl;
+                        if ( !fanout->getInput(cur.ptr).inverter ){
+                            cout << "\t\t\tno inverter" << endl;
+                            if ( cur.ptr->value == 1 ){
+                                cout << "\t\t\t\tcur->val = 1" << endl;;
+                                fanout->value = 1;
+                                queue.push_back(ImplicationGate({fanout,FORWARD}));
+                                queue.push_back(ImplicationGate({fanout,BACKWARD}));
+                                modifyList.push_back(fanout);
+                            }
+                        }
+                        else{
+                            cout << "\t\t\thas inverter" << endl;
+                            if ( cur.ptr->value == 0 ){
+                                cout << "\t\t\t\tcur->val = 0" << endl;;
+                                fanout->value = 1;
+                                queue.push_back(ImplicationGate({fanout,FORWARD}));
+                                queue.push_back(ImplicationGate({fanout,BACKWARD}));
+                                modifyList.push_back(fanout);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else if ( cur.action == BACKWARD ){
+            cout << "BACKWARD" << endl;
+            for ( auto& fanin : cur.ptr->fan_in ){
+                //check conflict
+                cout << "\tcur->fanin: " << fanin.ptr->name << endl;
+                if ( fanin.ptr->value != -1 ){
+                    if ( fanin.ctrlVal == 1 ){
+                        if ( !fanin.inverter ){
+                            if ( cur.ptr->value == 1 && fanin.ptr->value == 0){
+                                hasMA = false;
+                                break;
+                            }
+                        }else {
+                            if ( cur.ptr->value == 1 && fanin.ptr->value == 1){
+                                hasMA = false;
+                                break;
+                            }
+                        }
+                    }
+                    else if ( fanin.ctrlVal == 0 ){
+                        if ( !fanin.inverter ){
+                            if ( cur.ptr->value == 0 && fanin.ptr->value == 1){
+                                hasMA = false;
+                                break;
+                            }
+                        }else {
+                            if ( cur.ptr->value == 0 && fanin.ptr->value == 0){
+                                hasMA = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else{
+                    if ( fanin.ctrlVal == 1 ){
+                        cout << "\t\tctrl1" << endl;
+                        if ( !fanin.inverter ){
+                            cout << "\t\t\tno inverter" << endl;
+                            if ( cur.ptr->value == 1 ){
+                                cout << "\t\t\tcur->val = 1" << endl;
+                                fanin.ptr->value = 1;
+                                queue.push_back(ImplicationGate({fanin.ptr,FORWARD}));
+                                queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
+                                modifyList.push_back(fanin.ptr);
+                            }
+                        }else {
+                            cout << "\t\t\thas inverter" << endl;
+                            if ( cur.ptr->value == 1 ){
+                                cout << "\t\t\tcur->val = 1" << endl;
+                                fanin.ptr->value = 0;
+                                queue.push_back(ImplicationGate({fanin.ptr,FORWARD}));
+                                queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
+                                modifyList.push_back(fanin.ptr);
+                            }
+                        }
+                    }
+                    else if ( fanin.ctrlVal == 0 ){
+                        cout << "\t\tctrl0" << endl;
+                        if ( !fanin.inverter ){
+                            cout << "\t\t\tno inverter" << endl;
+                            if ( cur.ptr->value == 0 ){
+                                cout << "\t\t\tcur->val = 0" << endl;
+                                fanin.ptr->value = 0;
+                                queue.push_back(ImplicationGate({fanin.ptr,FORWARD}));
+                                queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
+                                modifyList.push_back(fanin.ptr);
+                            }
+                        }else {
+                            cout << "\t\t\thas inverter" << endl;
+                            if ( cur.ptr->value == 0 ){
+                                cout << "\t\t\tcur->val = 0" << endl;
+                                fanin.ptr->value = 1;
+                                queue.push_back(ImplicationGate({fanin.ptr,FORWARD}));
+                                queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
+                                modifyList.push_back(fanin.ptr);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    cout << target->name << ": " << target->value << " ";
+    for (unsigned int i = modifyList.size()-1; i >= pos ; --i){
+        cout << modifyList[i]->name << ": " << modifyList[i]->value << " ";
+        MASet.insert(GateWithValue({modifyList.back(),modifyList.back()->value}));
+        modifyList.back()->value = -1;
+        modifyList.pop_back();
+    }
+    cout << endl;
+    if ( !hasMA ) cout << "no MA." << endl;
+    return MASet;
+}
 
 void ThresholdNetwork::evalMandatoryAssignments(){
-    std::set<Gate*> MA0;
-    std::set<Gate*> MA1;
+    std::set<GateWithValue> MA0;
+    std::set<GateWithValue> MA1;
     /* --------------------------collect target------------------------ */
     for (auto gate : gatePool) {
         if (!gate.second->sideInputs.empty())
             targetGateList.push_back(gate.second);
     }
     /* ------------iteratively eval mandotoryAssignments--------------- */
-    std::list<ImplacationGate> queue;
     cout << "evalMandatoryAssignments start." << endl;
     for (Gate* target : targetGateList) {
-        cout << "Target: " << target->name << " | start."<< endl;
-        cout << "Side number： " << target->sideInputs.size() << endl;
-        bool hasMA = true;
+        modifyList.push_back(target);
         /* --------------------imply sideInput value------------------ */
         for ( Gate* sideInput : target->sideInputs )
-            implySideInputVal( target, sideInput );
+            implySideInputVal( target, sideInput);
         /* ------------------------stuck at 0------------------------ */
-        target->value = 1;
-        modifyList.push_back(target);
-        queue.push_back(ImplacationGate({ target, FORWARD}));
-        queue.push_back(ImplacationGate({ target, BACKWARD}));
-        cout << "Stuck at 0 start." << endl;
-        while (!queue.empty() && hasMA) {
-            ImplacationGate cur = queue.front();
-            queue.pop_front();
-            cout << "cur: " << cur.ptr->name << " = " << cur.ptr->value  << endl;
-            if ( cur.action == FORWARD ){
-                cout << "FORWARD" << endl;
-                for ( Gate* fanout : cur.ptr->fan_out ){
-                    // check conflict
-                    if ( fanout->value != -1 ){
-                        if ( fanout->getInput(cur.ptr).ctrlVal == 1 ){
-                            if ( !fanout->getInput(cur.ptr).inverter ){
-                                if ( fanout->value == 1 && cur.ptr->value == 0 ){
-                                    hasMA = false;
-                                    break;
-                                }
-                            } else{
-                                if ( fanout->value == 1 && cur.ptr->value == 1 ){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }
-                        }
-                        else if ( fanout->getInput(cur.ptr).ctrlVal == 0 ){
-                            if ( !fanout->getInput(cur.ptr).inverter ){
-                                if ( fanout->value == 0 && cur.ptr->value == 1 ){
-                                    hasMA = false;
-                                    break;
-                                }
-                            } else{
-                                if ( fanout->value == 0 && cur.ptr->value == 0 ){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else{
-                        cout << "\tcur->fanout: " << fanout->name << endl;
-                        if ( fanout->getInput(cur.ptr).ctrlVal == 1 ){
-                            cout << "\t\tctrl1" << endl;
-                            if ( !fanout->getInput(cur.ptr).inverter ){
-                                cout << "\t\t\tno inverter" << endl;
-                                if ( cur.ptr->value == 0 ){
-                                    cout << "\t\t\t\tcur->val = 0" << endl;;
-                                    fanout->value = 0;
-                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                    modifyList.push_back(fanout);
-                                }
-                            }
-                            else{
-                                cout << "\t\t\thas inverter" << endl;
-                                if ( cur.ptr->value == 1 ){
-                                    cout << "\t\t\t\tcur->val = 1" << endl;;
-                                    fanout->value = 0;
-                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                    modifyList.push_back(fanout);
-                                }
-                            }
-                        }
-                        else if ( fanout->getInput(cur.ptr).ctrlVal == 0 ){
-                            cout << "\t\tctrl0" << endl;
-                            if ( !fanout->getInput(cur.ptr).inverter ){
-                                cout << "\t\t\tno inverter" << endl;
-                                if ( cur.ptr->value == 1 ){
-                                    cout << "\t\t\t\tcur->val = 1" << endl;;
-                                    fanout->value = 1;
-                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                    modifyList.push_back(fanout);
-                                }
-                            }
-                            else{
-                                cout << "\t\t\thas inverter" << endl;
-                                if ( cur.ptr->value == 0 ){
-                                    cout << "\t\t\t\tcur->val = 0" << endl;;
-                                    fanout->value = 1;
-                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                    modifyList.push_back(fanout);
-                                }
-                            }
-                        }
-                        else if ( fanout->getInput(cur.ptr).ctrlVal == 2 ){
-                            if ( !fanout->getInput(cur.ptr).inverter ){
-                                fanout->value = cur.ptr->value;
-                                queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                modifyList.push_back(fanout);
-                            }
-                            else{
-                                fanout->value = !cur.ptr->value;
-                                queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                modifyList.push_back(fanout);
-                            }
-                        }
-                    }
-                }
-            }
-            else if ( cur.action == BACKWARD ){
-                cout << "BACKWARD" << endl;
-                for ( auto& fanin : cur.ptr->fan_in ){
-                    //check conflict
-                    cout << "\tcur->fanin: " << fanin.ptr->name << endl;
-                    if ( fanin.ptr->value != -1 ){
-                        if ( fanin.ctrlVal == 1 ){
-                            if ( !fanin.inverter ){
-                                if ( cur.ptr->value == 1 && fanin.ptr->value == 0){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }else {
-                                if ( cur.ptr->value == 1 && fanin.ptr->value == 1){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }
-                        }
-                        else if ( fanin.ctrlVal == 0 ){
-                            if ( !fanin.inverter ){
-                                if ( cur.ptr->value == 0 && fanin.ptr->value == 1){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }else {
-                                if ( cur.ptr->value == 0 && fanin.ptr->value == 0){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else{
-                        if ( fanin.ctrlVal == 1 ){
-                            cout << "\t\tctrl1" << endl;
-                            if ( !fanin.inverter ){
-                                cout << "\t\t\tno inverter" << endl;
-                                if ( cur.ptr->value == 1 ){
-                                    cout << "\t\t\tcur->val = 1" << endl;
-                                    fanin.ptr->value = 1;
-                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                    modifyList.push_back(fanin.ptr);
-                                }
-                            }else {
-                                cout << "\t\t\thas inverter" << endl;
-                                if ( cur.ptr->value == 1 ){
-                                    cout << "\t\t\tcur->val = 1" << endl;
-                                    fanin.ptr->value = 0;
-                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                    modifyList.push_back(fanin.ptr);
-                                }
-                            }
-                        }
-                        else if ( fanin.ctrlVal == 0 ){
-                            cout << "\t\tctrl0" << endl;
-                            if ( !fanin.inverter ){
-                                cout << "\t\t\tno inverter" << endl;
-                                if ( cur.ptr->value == 0 ){
-                                    cout << "\t\t\tcur->val = 0" << endl;
-                                    fanin.ptr->value = 0;
-                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                    modifyList.push_back(fanin.ptr);
-                                }
-                            }else {
-                                cout << "\t\t\thas inverter" << endl;
-                                if ( cur.ptr->value == 0 ){
-                                    cout << "\t\t\tcur->val = 0" << endl;
-                                    fanin.ptr->value = 1;
-                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                    modifyList.push_back(fanin.ptr);
-                                }
-                            }
-                        }
-                        else if ( fanin.ctrlVal == 2 ){
-                            if ( !fanin.inverter ){
-                                fanin.ptr->value = cur.ptr->value;
-                                queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                modifyList.push_back(fanin.ptr);
-                            }
-                            else{
-                                fanin.ptr->value = !cur.ptr->value;
-                                queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                modifyList.push_back(fanin.ptr);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        /* ------------------------reset modified gate------------------------ */
-        MA0.insert(modifyList.begin(), modifyList.end());
-        for (Gate* gate : modifyList) {
-            cout << gate->name << ": " << gate->value << " ";
-            gate->value = -1;
-        }
-        cout << endl;
-        if ( !hasMA ) cout << "noMA0" << endl;
-        modifyList.clear();
-
-        hasMA = true;
+        cout << "Start SA0" << endl;
         queue.clear();
+        for ( Gate* modifiedGate : modifyList ){
+            queue.push_back(ImplicationGate({modifiedGate,FORWARD}));
+            queue.push_back(ImplicationGate({modifiedGate,BACKWARD}));
+        }
+        target->value = 1;  MA0 = iterativeImplication(target);
         /* ------------------------stuck at 1------------------------ */
-        target->value = 0;
-        modifyList.push_back(target);
-        queue.push_back(ImplacationGate({ target, FORWARD}));
-        queue.push_back(ImplacationGate({ target, BACKWARD}));
-        cout << "Stuck at 1 start." << endl;
-
-        while (!queue.empty() && hasMA) {
-            ImplacationGate cur = queue.front();
-            queue.pop_front();
-            cout << "cur: " << cur.ptr->name << " = " << cur.ptr->value  << endl;
-            if ( cur.action == FORWARD ){
-                cout << "FORWARD" << endl;
-                for ( Gate* fanout : cur.ptr->fan_out ){
-                    // check conflict
-                    if ( fanout->value != -1 ){
-                        if ( fanout->getInput(cur.ptr).ctrlVal == 1 ){
-                            if ( !fanout->getInput(cur.ptr).inverter ){
-                                if ( fanout->value == 1 && cur.ptr->value == 0 ){
-                                    hasMA = false;
-                                    break;
-                                }
-                            } else{
-                                if ( fanout->value == 1 && cur.ptr->value == 1 ){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }
-                        }
-                        else if ( fanout->getInput(cur.ptr).ctrlVal == 0 ){
-                            if ( !fanout->getInput(cur.ptr).inverter ){
-                                if ( fanout->value == 0 && cur.ptr->value == 1 ){
-                                    hasMA = false;
-                                    break;
-                                }
-                            } else{
-                                if ( fanout->value == 0 && cur.ptr->value == 0 ){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else{
-                        cout << "\tcur->fanout: " << fanout->name << endl;
-                        if ( fanout->getInput(cur.ptr).ctrlVal == 1 ){
-                            cout << "\t\tctrl1" << endl;
-                            if ( !fanout->getInput(cur.ptr).inverter ){
-                                cout << "\t\t\tno inverter" << endl;
-                                if ( cur.ptr->value == 0 ){
-                                    cout << "\t\t\t\tcur->val = 0" << endl;;
-                                    fanout->value = 0;
-                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                    modifyList.push_back(fanout);
-                                }
-                            }
-                            else{
-                                cout << "\t\t\thas inverter" << endl;
-                                if ( cur.ptr->value == 1 ){
-                                    cout << "\t\t\t\tcur->val = 1" << endl;;
-                                    fanout->value = 0;
-                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                    modifyList.push_back(fanout);
-                                }
-                            }
-                        }
-                        else if ( fanout->getInput(cur.ptr).ctrlVal == 0 ){
-                            cout << "\t\tctrl0" << endl;
-                            if ( !fanout->getInput(cur.ptr).inverter ){
-                                cout << "\t\t\tno inverter" << endl;
-                                if ( cur.ptr->value == 1 ){
-                                    cout << "\t\t\t\tcur->val = 1" << endl;;
-                                    fanout->value = 1;
-                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                    modifyList.push_back(fanout);
-                                }
-                            }
-                            else{
-                                cout << "\t\t\thas inverter" << endl;
-                                if ( cur.ptr->value == 0 ){
-                                    cout << "\t\t\t\tcur->val = 0" << endl;;
-                                    fanout->value = 1;
-                                    queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                    modifyList.push_back(fanout);
-                                }
-                            }
-                        }
-                        else if ( fanout->getInput(cur.ptr).ctrlVal == 2 ){
-                            if ( !fanout->getInput(cur.ptr).inverter ){
-                                fanout->value = cur.ptr->value;
-                                queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                modifyList.push_back(fanout);
-                            }
-                            else{
-                                fanout->value = !cur.ptr->value;
-                                queue.push_back(ImplacationGate({fanout,FORWARD}));
-                                queue.push_back(ImplacationGate({fanout,BACKWARD}));
-                                modifyList.push_back(fanout);
-                            }
-                        }
-                    }
-                }
-            }
-            else if ( cur.action == BACKWARD ){
-                cout << "BACKWARD" << endl;
-                for ( auto& fanin : cur.ptr->fan_in ){
-                    //check conflict
-                    cout << "\tcur->fanin: " << fanin.ptr->name << endl;
-                    if ( fanin.ptr->value != -1 ){
-                        if ( fanin.ctrlVal == 1 ){
-                            if ( !fanin.inverter ){
-                                if ( cur.ptr->value == 1 && fanin.ptr->value == 0){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }else {
-                                if ( cur.ptr->value == 1 && fanin.ptr->value == 1){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }
-                        }
-                        else if ( fanin.ctrlVal == 0 ){
-                            if ( !fanin.inverter ){
-                                if ( cur.ptr->value == 0 && fanin.ptr->value == 1){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }else {
-                                if ( cur.ptr->value == 0 && fanin.ptr->value == 0){
-                                    hasMA = false;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else{
-                        if ( fanin.ctrlVal == 1 ){
-                            cout << "\t\tctrl1" << endl;
-                            if ( !fanin.inverter ){
-                                cout << "\t\t\tno inverter" << endl;
-                                if ( cur.ptr->value == 1 ){
-                                    cout << "\t\t\tcur->val = 1" << endl;
-                                    fanin.ptr->value = 1;
-                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                    modifyList.push_back(fanin.ptr);
-                                }
-                            }else {
-                                cout << "\t\t\thas inverter" << endl;
-                                if ( cur.ptr->value == 1 ){
-                                    cout << "\t\t\tcur->val = 1" << endl;
-                                    fanin.ptr->value = 0;
-                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                    modifyList.push_back(fanin.ptr);
-                                }
-                            }
-                        }
-                        else if ( fanin.ctrlVal == 0 ){
-                            cout << "\t\tctrl0" << endl;
-                            if ( !fanin.inverter ){
-                                cout << "\t\t\tno inverter" << endl;
-                                if ( cur.ptr->value == 0 ){
-                                    cout << "\t\t\tcur->val = 0" << endl;
-                                    fanin.ptr->value = 0;
-                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                    modifyList.push_back(fanin.ptr);
-                                }
-                            }else {
-                                cout << "\t\t\thas inverter" << endl;
-                                if ( cur.ptr->value == 0 ){
-                                    cout << "\t\t\tcur->val = 0" << endl;
-                                    fanin.ptr->value = 1;
-                                    queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                    queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                    modifyList.push_back(fanin.ptr);
-                                }
-                            }
-                        }
-                        else if ( fanin.ctrlVal == 2 ){
-                            if ( !fanin.inverter ){
-                                fanin.ptr->value = cur.ptr->value;
-                                queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                modifyList.push_back(fanin.ptr);
-                            }
-                            else{
-                                fanin.ptr->value = !cur.ptr->value;
-                                queue.push_back(ImplacationGate({fanin.ptr,FORWARD}));
-                                queue.push_back(ImplacationGate({fanin.ptr,BACKWARD}));
-                                modifyList.push_back(fanin.ptr);
-                            }
-                        }
-                    }
-                }
-            }
+        cout << "Start SA1" << endl;
+        queue.clear();
+        for ( Gate* modifiedGate : modifyList ){
+            queue.push_back(ImplicationGate({modifiedGate,FORWARD}));
+            queue.push_back(ImplicationGate({modifiedGate,BACKWARD}));
         }
-
-        /* ------------------------reset modified gate------------------------ */
-        MA1.insert(modifyList.begin(), modifyList.end());
-        for (Gate* gate : modifyList) {
-            cout << gate->name << ": " << gate->value << " ";
-            gate->value = -1;
-        }
-        cout << endl;
+        target->value = 0;  MA1 = iterativeImplication(target);
+        for ( Gate* modifiedGate : modifyList )
+            modifiedGate->value = -1;
         modifyList.clear();
-
-        if ( !hasMA ) cout << "noMA1" << endl;
-        sideInputModifyList.clear();
-
-        cout << "Target: " << target->name << " | end."<< endl << endl;
     }
 }
 
 void ThresholdNetwork::implySideInputVal(Gate* target, Gate* sideInput ){
-
-    //cout << "Side Input: " << sideInput->name << endl;
     for ( Gate* fanout : sideInput->fan_out ){
-        // if sideInput's fanout in target's fanoutCone
         if ( target->fanoutCone.find(fanout) != target->fanoutCone.end() ){
-            //cout << "Dominator: " << fanout->name << endl;
-            if ( fanout->getInput(sideInput).ctrlVal == 1 || fanout->getInput(sideInput).ctrlVal == 0  ){
-                if ( !fanout->getInput(sideInput).inverter )
+            if ( fanout->getInput(sideInput).ctrlVal != -1 ){
+                if ( !fanout->getInput(sideInput).inverter ){
                     sideInput->value = fanout->getInput(sideInput).ctrlVal;
-                else
+                }else {
                     sideInput->value = !fanout->getInput(sideInput).ctrlVal;
+                }
+                modifyList.push_back(sideInput);
             }
-            sideInputModifyList.push_back(sideInput);
         }
     }
 }
