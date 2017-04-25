@@ -28,7 +28,11 @@ struct GateWithValue {
     Gate* ptr;
     int value;
     bool operator<(const GateWithValue& rhs) const {
-        return ptr < rhs.ptr;
+        if (this->ptr->name < rhs.ptr->name) {
+            return true;
+        } else if (this->ptr->name >= rhs.ptr->name) {
+            return false;
+        }
     }
 };
 

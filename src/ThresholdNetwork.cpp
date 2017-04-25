@@ -251,7 +251,8 @@ void ThresholdNetwork::evalMandatoryAssignments(){
     }
     /* ------------iteratively eval mandotoryAssignments--------------- */
     cout << "evalMandatoryAssignments start." << endl;
-    for (Gate* target : targetGateList) {
+    for (auto& t : gatePool) {
+        Gate* target = t.second;
         modifyList.push_back(target);
         /* --------------------imply sideInput value------------------ */
         for ( Gate* sideInput : target->sideInputs )
@@ -272,6 +273,33 @@ void ThresholdNetwork::evalMandatoryAssignments(){
             queue.push_back(ImplicationGate({modifiedGate,BACKWARD}));
         }
         target->value = 0;  MA1 = iterativeImplication(target);
+        std::set<GateWithValue> MA;
+        // std::set_intersection(MA0.begin(), MA0.end(), MA1.begin(), MA1.end(),
+        //     std::inserter(MA, MA.begin()));
+        // cout << "MA Size: " << MA.size() << endl;
+
+        cout << target->name << "\'s MASET_RES: " << endl;
+        for ( auto it0 = MA0.begin() ; it0 != MA0.end(); ++it0 ){
+            for ( auto it1 = MA1.begin(); it1 != MA1.end(); ++it1 ){
+                if ( (*it0).ptr == (*it1).ptr ){
+                    if ( (*it0).value != (*it1).value ){
+                        MA.insert(GateWithValue({(*it1).ptr,-1}));
+                    }
+                }
+            }
+        }
+        cout << endl;
+        cout << "SIZE: " << MA.size() << endl;
+        for ( auto& it : MA ){
+            cout << it.ptr->name << " ";
+        }
+        cout << endl;
+        cout << "********************************\n";
+        for (const GateWithValue& ma : MA) {
+            cout << ma.ptr->name << " ";
+        }
+        cout << endl;
+        cout << "**************************************\n";
         for ( Gate* modifiedGate : modifyList )
             modifiedGate->value = -1;
         modifyList.clear();
