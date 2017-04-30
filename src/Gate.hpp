@@ -109,7 +109,9 @@ public:
      * \brief check the 0-cev & 1-cev to get the controlling value state
      */
     void checkContollingValueState();
-    
+
+    void evalIndirectImnplicationList();
+
     const ThresholdInput& getInput(const Gate* target);
     void _Debug_Gate_Information();
     int sideInputControllingValCount;       /*!< sum of number of sideInput's controlling Val*/
@@ -125,4 +127,6 @@ public:
     std::set<Gate*> sideInputs;             /*!< A set of this gate's sideinputs */
     std::set<Gate*> mandotoryAssignments;   /*!< A set of this gate's mandotoryAssignments */
     short value;                            /*!< gate value */
+    int stage;
+    static int indirectLevelConstraint = 3;
 };

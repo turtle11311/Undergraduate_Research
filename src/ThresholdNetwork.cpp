@@ -10,7 +10,7 @@ using std::cout;
 using std::endl;
 
 
-ThresholdNetwork::ThresholdNetwork(){
+ThresholdNetwork::ThresholdNetwork():indirectMode(false){
 }
 
 Gate* ThresholdNetwork::accessGateByName(const char *const name)
@@ -191,6 +191,10 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
                             }
+                            else if ( cur.ptr->stage-1 < Gate.indirectLevelConstraint ){
+                                indirectMode = true;
+                                indirectList.push_back(cur.ptr);
+                            }
                         }else {
                             cout << "\t\t\thas inverter" << endl;
                             if ( cur.ptr->value == 1 ){
@@ -199,6 +203,10 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,FORWARD}));
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
+                            }
+                            else if ( cur.ptr->stage-1 < Gate.indirectLevelConstraint ){
+                                indirectMode = true;
+                                indirectList.push_back(cur.ptr);
                             }
                         }
                     }
@@ -213,6 +221,10 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
                             }
+                            else if ( cur.ptr->stage-1 < Gate.indirectLevelConstraint ){
+                                indirectMode = true;
+                                indirectList.push_back(cur.ptr);
+                            }
                         }else {
                             cout << "\t\t\thas inverter" << endl;
                             if ( cur.ptr->value == 0 ){
@@ -222,13 +234,22 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
                             }
+                            else if ( cur.ptr->stage-1 < Gate.indirectLevelConstraint ){
+                                indirectMode = true;
+                                indirectList.push_back(cur.ptr);
+                            }
                         }
                     }
                 }
             }
         }
     }
+    if ( !indirectMode ) reinitializeModifiyList(pos, MASet);
+    if ( !hasMA ) cout << "no MA." << endl;
+    return MASet;
+}
 
+void ThresholdNetwork::reinitializeModifiyList( int pos, std::set<GateWithValue>& MASet ){
     cout << target->name << ": " << target->value << " ";
     for (unsigned int i = modifyList.size()-1; i >= pos ; --i){
         cout << modifyList[i]->name << ": " << modifyList[i]->value << " ";
@@ -237,8 +258,6 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
         modifyList.pop_back();
     }
     cout << endl;
-    if ( !hasMA ) cout << "no MA." << endl;
-    return MASet;
 }
 
 void ThresholdNetwork::evalMandatoryAssignments(){
@@ -265,6 +284,43 @@ void ThresholdNetwork::evalMandatoryAssignments(){
             queue.push_back(ImplicationGate({modifiedGate,BACKWARD}));
         }
         target->value = 1;  MA0 = iterativeImplication(target);
+        if ( indirectMode ){
+            for ( Gate* indirectImplicationTarget : indirectList ){
+                if ( indirectImplicationTarget->value == 1 ){
+                    std::vector<std::set<GateWithValue>> indirectTable;
+                    for ( int i = 0 ; i < indirectImplicationTarget->stage ; ++i ){
+                        indirectImplicationTarget->fanin[i].ptr->value = 1;
+                        int modifyListSize = modifyList.size();
+                        queue.clear();
+                        queue.push_back(ImplicationGate({indirectImplicationTarget->fanin[i].ptr,FORWARD}));
+                        queue.push_back(ImplicationGate({indirectImplicationTarget->fanin[i].ptr,BACKWARD}));
+                        std::set<GateWithValue> tempSet = iterativeImplication(target);
+                        std::set<Gate*> modifyListJr;
+                        for ( int i = modifyListSize ; i < modifyList.size(); ++i )
+                            modifyListJr.insert(GateWithValue({modifyList[i],modifyList[i]->value}));
+                        indirectTable.push_back(modifyListJr);
+                        indirectImplicationTarget->fanin[i].ptr->value = -1;
+                        for ( int i = modifyList.size()-1 ; i >= modifyListSize ; --i ){
+                            modifyList[i] = -1;
+                            modifyList.pop_back();
+                        }
+                    }
+                    std::vector<GateWithValue> sameIndirectImplicationList;
+                    for ( int i = 0 ; i < indirectTable[i].size() ; ++i ){
+                        bool haveSameOne = true;
+                        for ( int j = 1 ; j < indirectTable.size() ; ++j){
+                            if ( indirectTable[j].find( indirectTable[0][i] ) != indirectTable[j].end() ){
+                                haveSameOne = false;
+                                break;
+                            }
+                        }
+                        if ( haveSameOne )
+                            sameIndirectImplicationList.push_back(indirectTable[0][i]);
+                    }
+                    
+                }
+            }
+        }
         /* ------------------------stuck at 1------------------------ */
         cout << "Start SA1" << endl;
         queue.clear();

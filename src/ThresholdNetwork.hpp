@@ -50,6 +50,8 @@ private:
     std::vector<Gate*> targetGateList;
     std::list<ImplicationGate> queue;
     std::vector<Gate*> modifyList;
+    bool indirectMode;
+    std::list<Gate*> indirectList;
 public:
     /*!
      * \fn ThresholdNetwork()
@@ -81,6 +83,7 @@ public:
     void implySideInputVal(Gate*,Gate*);
 
     std::set<GateWithValue> iterativeImplication( Gate*);
+    void reinitializeModifiyList( int, std::set<GateWithValue>& );
     void _Debug_Wiring();
     void _Debug_Onset_Critical_Effect_Vector();
     void _Debug_Controlling_Value();

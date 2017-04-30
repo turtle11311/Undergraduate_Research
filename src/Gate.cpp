@@ -8,7 +8,7 @@ using std::endl;
 using std::get;
 
 Gate::Gate(const char* const name)
-    : name(name), value(-1)
+    : name(name), value(-1), stage(0)
 { sideInputControllingValCount = 0;}
 
 void Gate::addInput(Gate *input, int thresholdVal, bool phase)
@@ -163,6 +163,16 @@ const ThresholdInput& Gate::getInput(const Gate* target)
         }
     }
     return nullGate;
+}
+
+void Gate::evalIndirectImnplicationList(){
+    stage = 1;
+    for ( int i = 0 ; i < onsetTable.size() ; ++i ){
+        if ( onsetTable[i][stage-1] == 0 )
+            ++stage;
+        if ( stage > indirectLevelConstraint )
+            break;
+    }
 }
 
 void Gate::_Debug_Gate_Information(){
