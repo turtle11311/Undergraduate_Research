@@ -191,7 +191,7 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
                             }
-                            else if ( cur.ptr->stage-1 < Gate.indirectLevelConstraint ){
+                            else if ( (cur.ptr->stage)-1 < Gate::indirectLevelConstraint ){
                                 indirectMode = true;
                                 indirectList.push_back(cur.ptr);
                             }
@@ -204,7 +204,7 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
                             }
-                            else if ( cur.ptr->stage-1 < Gate.indirectLevelConstraint ){
+                            else if ( (cur.ptr->stage)-1 < Gate::indirectLevelConstraint ){
                                 indirectMode = true;
                                 indirectList.push_back(cur.ptr);
                             }
@@ -221,7 +221,7 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
                             }
-                            else if ( cur.ptr->stage-1 < Gate.indirectLevelConstraint ){
+                            else if ( (cur.ptr->stage)-1 < Gate::indirectLevelConstraint ){
                                 indirectMode = true;
                                 indirectList.push_back(cur.ptr);
                             }
@@ -234,7 +234,7 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
                             }
-                            else if ( cur.ptr->stage-1 < Gate.indirectLevelConstraint ){
+                            else if ( (cur.ptr->stage)-1 < Gate::indirectLevelConstraint ){
                                 indirectMode = true;
                                 indirectList.push_back(cur.ptr);
                             }
@@ -244,12 +244,12 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
             }
         }
     }
-    if ( !indirectMode ) reinitializeModifiyList(pos, MASet);
+    if ( !indirectMode ) reinitializeModifiyList(pos, MASet,target);
     if ( !hasMA ) cout << "no MA." << endl;
     return MASet;
 }
 
-void ThresholdNetwork::reinitializeModifiyList( int pos, std::set<GateWithValue>& MASet ){
+void ThresholdNetwork::reinitializeModifiyList( int pos, std::set<GateWithValue>& MASet, Gate* target ){
     cout << target->name << ": " << target->value << " ";
     for (unsigned int i = modifyList.size()-1; i >= pos ; --i){
         cout << modifyList[i]->name << ": " << modifyList[i]->value << " ";
@@ -283,44 +283,11 @@ void ThresholdNetwork::evalMandatoryAssignments(){
             queue.push_back(ImplicationGate({modifiedGate,FORWARD}));
             queue.push_back(ImplicationGate({modifiedGate,BACKWARD}));
         }
+        int initialListSize = modifyList.size();
         target->value = 1;  MA0 = iterativeImplication(target);
-        if ( indirectMode ){
-            for ( Gate* indirectImplicationTarget : indirectList ){
-                if ( indirectImplicationTarget->value == 1 ){
-                    std::vector<std::set<GateWithValue>> indirectTable;
-                    for ( int i = 0 ; i < indirectImplicationTarget->stage ; ++i ){
-                        indirectImplicationTarget->fanin[i].ptr->value = 1;
-                        int modifyListSize = modifyList.size();
-                        queue.clear();
-                        queue.push_back(ImplicationGate({indirectImplicationTarget->fanin[i].ptr,FORWARD}));
-                        queue.push_back(ImplicationGate({indirectImplicationTarget->fanin[i].ptr,BACKWARD}));
-                        std::set<GateWithValue> tempSet = iterativeImplication(target);
-                        std::set<Gate*> modifyListJr;
-                        for ( int i = modifyListSize ; i < modifyList.size(); ++i )
-                            modifyListJr.insert(GateWithValue({modifyList[i],modifyList[i]->value}));
-                        indirectTable.push_back(modifyListJr);
-                        indirectImplicationTarget->fanin[i].ptr->value = -1;
-                        for ( int i = modifyList.size()-1 ; i >= modifyListSize ; --i ){
-                            modifyList[i] = -1;
-                            modifyList.pop_back();
-                        }
-                    }
-                    std::vector<GateWithValue> sameIndirectImplicationList;
-                    for ( int i = 0 ; i < indirectTable[i].size() ; ++i ){
-                        bool haveSameOne = true;
-                        for ( int j = 1 ; j < indirectTable.size() ; ++j){
-                            if ( indirectTable[j].find( indirectTable[0][i] ) != indirectTable[j].end() ){
-                                haveSameOne = false;
-                                break;
-                            }
-                        }
-                        if ( haveSameOne )
-                            sameIndirectImplicationList.push_back(indirectTable[0][i]);
-                    }
-                    
-                }
-            }
-        }
+        intersectionOfIndirectTarget(target, MA0);
+        reinitializeModifiyList(initialListSize,MA0,target);
+        if ( indirectMode ) indirectMode = false;
         /* ------------------------stuck at 1------------------------ */
         cout << "Start SA1" << endl;
         queue.clear();
@@ -329,11 +296,11 @@ void ThresholdNetwork::evalMandatoryAssignments(){
             queue.push_back(ImplicationGate({modifiedGate,BACKWARD}));
         }
         target->value = 0;  MA1 = iterativeImplication(target);
-        std::set<GateWithValue> MA;
-        // std::set_intersection(MA0.begin(), MA0.end(), MA1.begin(), MA1.end(),
-        //     std::inserter(MA, MA.begin()));
-        // cout << "MA Size: " << MA.size() << endl;
+        intersectionOfIndirectTarget(target, MA1);
+        reinitializeModifiyList(initialListSize,MA1,target);
+        if ( indirectMode ) indirectMode = false;
 
+        std::set<GateWithValue> MA;
         cout << target->name << "\'s MASET_RES: " << endl;
         for ( auto it0 = MA0.begin() ; it0 != MA0.end(); ++it0 ){
             for ( auto it1 = MA1.begin(); it1 != MA1.end(); ++it1 ){
@@ -359,6 +326,44 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         for ( Gate* modifiedGate : modifyList )
             modifiedGate->value = -1;
         modifyList.clear();
+    }
+}
+
+void ThresholdNetwork::intersectionOfIndirectTarget( Gate* target , std::set<GateWithValue>& MA){
+    if ( indirectMode ){
+        for ( Gate* indirectImplicationTarget : indirectList ){
+            if ( indirectImplicationTarget->value == 1 ){
+                std::vector<std::set<GateWithValue>> indirectTable;
+                for ( int i = 0 ; i < indirectImplicationTarget->stage ; ++i ){
+                    indirectImplicationTarget->fan_in[i].ptr->value = 1;
+                    int modifyListSize = modifyList.size();
+                    queue.clear();
+                    queue.push_back(ImplicationGate({indirectImplicationTarget->fan_in[i].ptr,FORWARD}));
+                    queue.push_back(ImplicationGate({indirectImplicationTarget->fan_in[i].ptr,BACKWARD}));
+                    std::set<GateWithValue> tempSet = iterativeImplication(target);
+                    std::set<GateWithValue> modifyListJr;
+                    for ( int i = modifyListSize ; i < modifyList.size(); ++i )
+                    modifyListJr.insert(GateWithValue({modifyList[i],modifyList[i]->value}));
+                    indirectTable.push_back(modifyListJr);
+                    indirectImplicationTarget->fan_in[i].ptr->value = -1;
+                    for ( int i = modifyList.size()-1 ; i >= modifyListSize ; --i ){
+                        modifyList[i]->value = -1;
+                        modifyList.pop_back();
+                    }
+                }
+                for ( auto& indirectGateValue : indirectTable[0] ){
+                    bool haveSameOne = true;
+                    for ( int j = 1 ; j < indirectTable.size() ; ++j){
+                        if ( indirectTable[j].find( indirectGateValue ) != indirectTable[j].end() ){
+                            haveSameOne = false;
+                            break;
+                        }
+                    }
+                    if ( haveSameOne )
+                        MA.insert(indirectGateValue);
+                }
+            }
+        }
     }
 }
 

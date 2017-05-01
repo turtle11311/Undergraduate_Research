@@ -83,7 +83,8 @@ public:
     void implySideInputVal(Gate*,Gate*);
 
     std::set<GateWithValue> iterativeImplication( Gate*);
-    void reinitializeModifiyList( int, std::set<GateWithValue>& );
+    void intersectionOfIndirectTarget(Gate*, std::set<GateWithValue>&);
+    void reinitializeModifiyList( int, std::set<GateWithValue>& , Gate*);
     void _Debug_Wiring();
     void _Debug_Onset_Critical_Effect_Vector();
     void _Debug_Controlling_Value();

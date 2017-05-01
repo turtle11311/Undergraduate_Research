@@ -128,5 +128,5 @@ public:
     std::set<Gate*> mandotoryAssignments;   /*!< A set of this gate's mandotoryAssignments */
     short value;                            /*!< gate value */
     int stage;
-    static int indirectLevelConstraint = 3;
+    const static int indirectLevelConstraint = 3;
 };
