@@ -51,6 +51,7 @@ void ThresholdNetwork::_Debug_Wiring(){
 }
 
 std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
+    if ( indirectMode ) cout << "****************indirectMode******************" << endl;
     std::set<GateWithValue> MASet;
     MASet.insert(GateWithValue({target,target->value}));
     int pos = modifyList.size();
@@ -192,6 +193,7 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 modifyList.push_back(fanin.ptr);
                             }
                             else if ( (cur.ptr->stage)-1 < Gate::indirectLevelConstraint ){
+                                cout << "WTF" << endl;
                                 indirectMode = true;
                                 indirectList.push_back(cur.ptr);
                             }
@@ -205,6 +207,7 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 modifyList.push_back(fanin.ptr);
                             }
                             else if ( (cur.ptr->stage)-1 < Gate::indirectLevelConstraint ){
+                                cout << "WTF" << endl;
                                 indirectMode = true;
                                 indirectList.push_back(cur.ptr);
                             }
@@ -222,8 +225,8 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 modifyList.push_back(fanin.ptr);
                             }
                             else if ( (cur.ptr->stage)-1 < Gate::indirectLevelConstraint ){
-                                indirectMode = true;
-                                indirectList.push_back(cur.ptr);
+                                // indirectMode = true;
+                                // indirectList.push_back(cur.ptr);
                             }
                         }else {
                             cout << "\t\t\thas inverter" << endl;
@@ -235,8 +238,8 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 modifyList.push_back(fanin.ptr);
                             }
                             else if ( (cur.ptr->stage)-1 < Gate::indirectLevelConstraint ){
-                                indirectMode = true;
-                                indirectList.push_back(cur.ptr);
+                                // indirectMode = true;
+                                // indirectList.push_back(cur.ptr);
                             }
                         }
                     }
@@ -351,6 +354,7 @@ void ThresholdNetwork::intersectionOfIndirectTarget( Gate* target , std::set<Gat
                         modifyList.pop_back();
                     }
                 }
+                if ( !indirectTable.size() ) continue;
                 for ( auto& indirectGateValue : indirectTable[0] ){
                     bool haveSameOne = true;
                     for ( int j = 1 ; j < indirectTable.size() ; ++j){
@@ -365,6 +369,7 @@ void ThresholdNetwork::intersectionOfIndirectTarget( Gate* target , std::set<Gat
             }
         }
     }
+    cout << "indirectMA: " << MA.size() << endl;
 }
 
 void ThresholdNetwork::implySideInputVal(Gate* target, Gate* sideInput ){
