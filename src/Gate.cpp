@@ -8,7 +8,7 @@ using std::endl;
 using std::get;
 
 Gate::Gate(const char* const name)
-    : name(name), value(-1), stage(0)
+    : name(name), value(-1), onsetStage(0), offsetStage(0)
 { sideInputControllingValCount = 0;}
 
 void Gate::addInput(Gate *input, int thresholdVal, bool phase)
@@ -58,10 +58,6 @@ void Gate::evalCriticalEffectVectors()
     onsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
     initialVec.assign(fan_in.size(), 1);
     offsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
-    if ( name == "h" ){
-        cout << onsetTable.size() << endl;
-        cout << offsetTable.size() << endl;
-    }
 }
 
 std::set<Gate*>* Gate::evalDominators()
@@ -165,14 +161,27 @@ const ThresholdInput& Gate::getInput(const Gate* target)
     return nullGate;
 }
 
-void Gate::evalIndirectImnplicationList(){
-    stage = 1;
-    for ( int i = 0 ; i < onsetTable.size() ; ++i ){
-        if ( onsetTable[i][stage-1] == 0 )
-            ++stage;
-        if ( stage > indirectLevelConstraint )
-            break;
+int Gate::evalIndirectImnplicationList(int mode){
+
+    if ( mode ){
+        onsetStage = 1;
+        for ( int i = 0 ; i < onsetTable.size() ; ++i ){
+            if ( onsetTable[i][onsetStage-1] == 0 )
+                ++onsetStage;
+            if ( onsetStage > indirectLevelConstraint )
+                break;
+        }
     }
+    else {
+        offsetStage = 1;
+        for ( int i = 0 ; i < offsetTable.size() ; ++i ){
+            if ( offsetTable[i][offsetStage-1] == 1 )
+                ++offsetStage;
+            if ( offsetStage > indirectLevelConstraint )
+                break;
+        }
+    }
+    return mode ? onsetStage : offsetStage;
 }
 
 void Gate::_Debug_Gate_Information(){

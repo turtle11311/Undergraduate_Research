@@ -110,7 +110,7 @@ public:
      */
     void checkContollingValueState();
 
-    void evalIndirectImnplicationList();
+    int evalIndirectImnplicationList( int mode );
 
     const ThresholdInput& getInput(const Gate* target);
     void _Debug_Gate_Information();
@@ -127,6 +127,6 @@ public:
     std::set<Gate*> sideInputs;             /*!< A set of this gate's sideinputs */
     std::set<Gate*> mandotoryAssignments;   /*!< A set of this gate's mandotoryAssignments */
     short value;                            /*!< gate value */
-    int stage;
+    int onsetStage, offsetStage;
     const static int indirectLevelConstraint = 3;
 };
