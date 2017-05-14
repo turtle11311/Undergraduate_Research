@@ -62,9 +62,14 @@ void Gate::evalCriticalEffectVectors()
 
 std::set<Gate*>* Gate::evalDominators()
 {
-    if (!dominators.empty() || type == PO) {
+    if ( !dominators.empty()) {
         return &dominators;
     }
+    if ( type == PO ){
+        dominators.insert(this);
+        return &dominators;
+    }
+    // cout << "\tCurrent: " << name << endl;
     std::set<Gate*> intersection(*fan_out.front()->evalDominators());
     std::set<Gate*> tmpSet;
     for (auto it = ++fan_out.begin(); it != fan_out.end(); ++it) {
@@ -77,12 +82,25 @@ std::set<Gate*>* Gate::evalDominators()
     }
     intersection.insert(this);
     dominators = intersection;
+
+
     return &dominators;
+}
+
+void Gate::_Debug_Fanout_Cone(){
+    cout << name << "\'s fanoutCone: ";
+    for ( Gate* fanoutConeGate : fanoutCone )
+    cout << fanoutConeGate->name << ", ";
+    cout << endl;
 }
 
 std::set<Gate*>* Gate::evalFanoutCone()
 {
-    if (!fanoutCone.empty() || type == PO) {
+    if (!fanoutCone.empty() ) {
+        return &fanoutCone;
+    }
+    if ( type == PO ){
+        fanoutCone.insert(this);
         return &fanoutCone;
     }
 
@@ -101,6 +119,14 @@ std::set<Gate*>* Gate::evalFanoutCone()
     return &fanoutCone;
 }
 
+void Gate::_Debug_Side_Inputs(){
+    cout << name << "\'s sideInputs: ";
+    for ( Gate* si : sideInputs ){
+        cout << si->name << ", ";
+    }
+    cout <<endl;
+}
+
 void Gate::evalSideInput()
 {
     for (Gate* dominator : dominators) {
@@ -115,10 +141,18 @@ void Gate::evalSideInput()
     for (auto& gate : fan_in) {
         sideInputs.erase(gate.ptr);
     }
+    sideInputs.erase(this);
 }
 
 void Gate::checkContollingValueState(){
     // check onsetTable
+    if ( onsetTable.size() == 1 ){
+        for ( int pos = 0 ; pos < fan_in.size() ; ++pos ){
+            if ( onsetTable[0][pos] == 1 ){
+                fan_in[pos].ctrlVal = 1;
+            }
+        }
+    }
     for ( int pos = 0 ; pos < fan_in.size() ; ++pos  ){
         bool flag = true;
         for ( int i = 0; i < onsetTable.size() ; ++i ){
@@ -131,6 +165,12 @@ void Gate::checkContollingValueState(){
         else break;
     }
     // check offsetTable
+    if ( offsetTable.size() == 1 ){
+        for ( int pos = 0 ; pos < fan_in.size() ; ++pos ){
+            if ( offsetTable[0][pos] == 0 )
+                fan_in[pos].ctrlVal = 0;
+        }
+    }
     for ( int pos = 0 ; pos < fan_in.size() ; ++pos  ){
         bool flag = true;
         for ( int i = 0; i < offsetTable.size() ; ++i ){
@@ -139,12 +179,7 @@ void Gate::checkContollingValueState(){
                 break;
             }
         }
-        if ( flag ) {
-            if ( fan_in[pos].ctrlVal == 1 )
-                fan_in[pos].ctrlVal = 2;
-            else
-                fan_in[pos].ctrlVal = 0;
-        }
+        if ( flag ) fan_in[pos].ctrlVal = 0;
         else break;
     }
 }

@@ -89,6 +89,7 @@ public:
     void _Debug_Onset_Critical_Effect_Vector();
     void _Debug_Controlling_Value();
     void _Debug_Check_The_Sum_Of_The_Number_Of_Side_Inputs();
+    void _Debug_Mandatory_Assignments(std::set<GateWithValue>&);
     /*!
      * \fn ~ThresholdNetwork()
      * \brief Destructor of this class

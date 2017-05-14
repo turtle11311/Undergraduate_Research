@@ -27,6 +27,8 @@ void ThresholdNetwork::foreachGateAttr()
         gate->evalDominators();
         gate->evalFanoutCone();
     }
+    for (auto &gate : gatePool)
+        gate.second->fanoutCone.erase(gate.second);
     for (auto &gate : gatePool) {
         gate.second->evalSideInput();
         gate.second->evalCriticalEffectVectors();
@@ -103,8 +105,9 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                         if ( !fanout->getInput(cur.ptr).inverter ){
                             cout << "\t\t\tno inverter" << endl;
                             if ( cur.ptr->value == 0 ){
-                                cout << "\t\t\t\tcur->val = 0" << endl;;
+                                cout << "\t\t\t\tcur->val = 0" << endl;
                                 fanout->value = 0;
+                                cout << "\t\t\t\t\timply " << fanout->name << " = " << 0 << endl;
                                 queue.push_back(ImplicationGate({fanout,FORWARD}));
                                 queue.push_back(ImplicationGate({fanout,BACKWARD}));
                                 modifyList.push_back(fanout);
@@ -113,8 +116,9 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                         else{
                             cout << "\t\t\thas inverter" << endl;
                             if ( cur.ptr->value == 1 ){
-                                cout << "\t\t\t\tcur->val = 1" << endl;;
+                                cout << "\t\t\t\tcur->val = 1" << endl;
                                 fanout->value = 0;
+                                cout << "\t\t\t\t\timply " << fanout->name << " = " << 0 << endl;
                                 queue.push_back(ImplicationGate({fanout,FORWARD}));
                                 queue.push_back(ImplicationGate({fanout,BACKWARD}));
                                 modifyList.push_back(fanout);
@@ -126,8 +130,9 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                         if ( !fanout->getInput(cur.ptr).inverter ){
                             cout << "\t\t\tno inverter" << endl;
                             if ( cur.ptr->value == 1 ){
-                                cout << "\t\t\t\tcur->val = 1" << endl;;
+                                cout << "\t\t\t\tcur->val = 1" << endl;
                                 fanout->value = 1;
+                                cout << "\t\t\t\t\timply " << fanout->name << " = " << 1 << endl;
                                 queue.push_back(ImplicationGate({fanout,FORWARD}));
                                 queue.push_back(ImplicationGate({fanout,BACKWARD}));
                                 modifyList.push_back(fanout);
@@ -136,8 +141,9 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                         else{
                             cout << "\t\t\thas inverter" << endl;
                             if ( cur.ptr->value == 0 ){
-                                cout << "\t\t\t\tcur->val = 0" << endl;;
+                                cout << "\t\t\t\tcur->val = 0" << endl;
                                 fanout->value = 1;
+                                cout << "\t\t\t\t\timply " << fanout->name << " = " << 1 << endl;
                                 queue.push_back(ImplicationGate({fanout,FORWARD}));
                                 queue.push_back(ImplicationGate({fanout,BACKWARD}));
                                 modifyList.push_back(fanout);
@@ -188,6 +194,7 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                             if ( cur.ptr->value == 1 ){
                                 cout << "\t\t\tcur->val = 1" << endl;
                                 fanin.ptr->value = 1;
+                                cout << "\t\t\t\t\timply " << fanin.ptr->name << " = " << 1 << endl;
                                 queue.push_back(ImplicationGate({fanin.ptr,FORWARD}));
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
@@ -202,6 +209,7 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                             if ( cur.ptr->value == 1 ){
                                 cout << "\t\t\tcur->val = 1" << endl;
                                 fanin.ptr->value = 0;
+                                cout << "\t\t\t\t\timply " << fanin.ptr->name << " = " << 0 << endl;
                                 queue.push_back(ImplicationGate({fanin.ptr,FORWARD}));
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
@@ -220,6 +228,7 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                             if ( cur.ptr->value == 0 ){
                                 cout << "\t\t\tcur->val = 0" << endl;
                                 fanin.ptr->value = 0;
+                                cout << "\t\t\t\t\timply " << fanin.ptr->name << " = " << 0 << endl;
                                 queue.push_back(ImplicationGate({fanin.ptr,FORWARD}));
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
@@ -233,6 +242,7 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                             if ( cur.ptr->value == 0 ){
                                 cout << "\t\t\tcur->val = 0" << endl;
                                 fanin.ptr->value = 1;
+                                cout << "\t\t\t\t\timply " << fanin.ptr->name << " = " << 1 << endl;
                                 queue.push_back(ImplicationGate({fanin.ptr,FORWARD}));
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
@@ -253,17 +263,25 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
 }
 
 void ThresholdNetwork::reinitializeModifiyList( int pos, std::set<GateWithValue>& MASet, Gate* target ){
-    cout << target->name << ": " << target->value << " ";
+    //cout << target->name << ": " << target->value << " ";
+    for (unsigned int i = 0; i < modifyList.size() ; ++i)
+        MASet.insert(GateWithValue({modifyList[i],modifyList[i]->value}));
     for (unsigned int i = modifyList.size()-1; i >= pos ; --i){
-        cout << modifyList[i]->name << ": " << modifyList[i]->value << " ";
-        MASet.insert(GateWithValue({modifyList.back(),modifyList.back()->value}));
+    //    cout << modifyList[i]->name << ": " << modifyList[i]->value << " ";
         modifyList.back()->value = -1;
         modifyList.pop_back();
+    }
+}
+
+void ThresholdNetwork::_Debug_Mandatory_Assignments( std::set<GateWithValue>& MA){
+    for ( GateWithValue gwv : MA ){
+        cout << gwv.ptr->name << ": " << gwv.value << ", ";
     }
     cout << endl;
 }
 
 void ThresholdNetwork::evalMandatoryAssignments(){
+    cout << "evalMandatoryAssignments start." << endl;
     std::set<GateWithValue> MA0;
     std::set<GateWithValue> MA1;
     /* --------------------------collect target------------------------ */
@@ -272,7 +290,6 @@ void ThresholdNetwork::evalMandatoryAssignments(){
             targetGateList.push_back(gate.second);
     }
     /* ------------iteratively eval mandotoryAssignments--------------- */
-    cout << "evalMandatoryAssignments start." << endl;
     for (auto& t : gatePool) {
         Gate* target = t.second;
         modifyList.push_back(target);
@@ -281,24 +298,35 @@ void ThresholdNetwork::evalMandatoryAssignments(){
             implySideInputVal( target, sideInput);
         /* ------------------------stuck at 0------------------------ */
         cout << "Start SA0" << endl;
+        cout << "cur modifyList size: " << modifyList.size() <<endl;
+        target->value = 1;
         queue.clear();
+        cout << "Target " << target->name << "\'s initialMA: ";
         for ( Gate* modifiedGate : modifyList ){
+            cout << modifiedGate->name << ": " << modifiedGate->value << ", ";
             queue.push_back(ImplicationGate({modifiedGate,FORWARD}));
             queue.push_back(ImplicationGate({modifiedGate,BACKWARD}));
         }
+        cout << endl;
         int initialListSize = modifyList.size();
-        target->value = 1;  MA0 = iterativeImplication(target);
+        MA0 = iterativeImplication(target);
+        cout << target->name << "\'s MA0-> ";
+        _Debug_Mandatory_Assignments(MA0);
         intersectionOfIndirectTarget(target, MA0);
         reinitializeModifiyList(initialListSize,MA0,target);
         if ( indirectMode ) indirectMode = false;
         /* ------------------------stuck at 1------------------------ */
         cout << "Start SA1" << endl;
+        cout << "cur modifyList size: " << modifyList.size() <<endl;
+        target->value = 0;
         queue.clear();
         for ( Gate* modifiedGate : modifyList ){
             queue.push_back(ImplicationGate({modifiedGate,FORWARD}));
             queue.push_back(ImplicationGate({modifiedGate,BACKWARD}));
         }
-        target->value = 0;  MA1 = iterativeImplication(target);
+        MA1 = iterativeImplication(target);
+        cout << target->name << "\'s MA1-> ";
+        _Debug_Mandatory_Assignments(MA1);
         intersectionOfIndirectTarget(target, MA1);
         reinitializeModifiyList(initialListSize,MA1,target);
         if ( indirectMode ) indirectMode = false;

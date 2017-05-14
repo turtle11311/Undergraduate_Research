@@ -109,7 +109,8 @@ public:
      * \brief check the 0-cev & 1-cev to get the controlling value state
      */
     void checkContollingValueState();
-
+    void _Debug_Side_Inputs();
+    void _Debug_Fanout_Cone();
     int evalIndirectImnplicationList( int mode );
 
     const ThresholdInput& getInput(const Gate* target);
