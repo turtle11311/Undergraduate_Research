@@ -113,8 +113,11 @@ public:
     void _Debug_Fanout_Cone();
     int evalIndirectImnplicationList( int mode );
 
+    bool directEvalRes();
     const ThresholdInput& getInput(const Gate* target);
     void _Debug_Gate_Information();
+    void refreshDeterminedFaninCount(bool);
+    bool exhaustiveChecking();
     int sideInputControllingValCount;       /*!< sum of number of sideInput's controlling Val*/
     int thresholdVal;                       /*!< Threshold value of this gate */
     GateType type;                          /*!< Type of the gate*/
@@ -130,4 +133,5 @@ public:
     short value;                            /*!< gate value */
     int onsetStage, offsetStage;
     const static int indirectLevelConstraint = 3;
+    int determinedFaninCount;
 };

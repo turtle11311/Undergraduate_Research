@@ -8,7 +8,7 @@ using std::endl;
 using std::get;
 
 Gate::Gate(const char* const name)
-    : name(name), value(-1), onsetStage(0), offsetStage(0)
+    : name(name), value(-1), onsetStage(0), offsetStage(0), determinedFaninCount(0)
 { sideInputControllingValCount = 0;}
 
 void Gate::addInput(Gate *input, int thresholdVal, bool phase)
@@ -60,6 +60,35 @@ void Gate::evalCriticalEffectVectors()
     offsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
 }
 
+bool Gate::directEvalRes(){
+    int weightSum = 0;
+    for ( int i = 0 ; i < fan_in.size() ; ++i ){
+        if ( !fan_in[i].inverter ){
+            weightSum += (fan_in[i].ptr->value == 1) ? fan_in[i].weight : 0;
+        }
+        else{
+            weightSum += (fan_in[i].ptr->value == 0) ? fan_in[i].weight : 0;
+        }
+        if ( weightSum >= thresholdVal )
+            return true;
+    }
+    return false;
+}
+
+bool Gate::exhaustiveChecking(){
+    for ( int i = 0 ; i < fan_in.size() ; ++i )
+        if ( fan_in[i].ptr->value == -1 )
+            return false;
+    return true;
+}
+
+void Gate::refreshDeterminedFaninCount( bool subtract ){
+
+    for ( Gate* fanout : fan_out )
+        fanout->determinedFaninCount = ( subtract ) ? fanout->determinedFaninCount-1 :
+                                                        fanout->determinedFaninCount+1;
+}
+
 std::set<Gate*>* Gate::evalDominators()
 {
     if ( !dominators.empty()) {
@@ -82,7 +111,6 @@ std::set<Gate*>* Gate::evalDominators()
     }
     intersection.insert(this);
     dominators = intersection;
-
 
     return &dominators;
 }
