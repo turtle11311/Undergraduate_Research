@@ -8,7 +8,7 @@ using std::endl;
 using std::get;
 
 Gate::Gate(const char* const name)
-    : name(name), value(-1), onsetStage(0), offsetStage(0), determinedFaninCount(0)
+    : name(name), value(-1), onsetStage(0), offsetStage(0), determinedFaninCount(0), totalWeight(0), constTotalWeight(0)
 { sideInputControllingValCount = 0;}
 
 void Gate::addInput(Gate *input, int thresholdVal, bool phase)
@@ -60,19 +60,111 @@ void Gate::evalCriticalEffectVectors()
     offsetCriticalEffectVector(initialVec, 0, 0, uncheckedSum);
 }
 
-bool Gate::directEvalRes(){
+std::vector<Gate*> Gate::backwardChecking(){
+    if ( name == "v8" )
+        cout << "got u2!!!!!!!!!!!!!\n";
+    std::vector<Gate*> implyGateList;
+    Gate temp = *this;
+    temp.thresholdVal = thresholdVal;
+    temp.fan_in.clear();
+    for ( auto& fanin : fan_in ){
+        if ( fanin.ptr->value != -1 ){
+                temp.thresholdVal -= fanin.ptr->value;
+        }
+        temp.fan_in.push_back(fanin);
+    }
+    temp.onsetTable.clear();
+    temp.offsetTable.clear();
+    temp.evalCriticalEffectVectors();
+    temp.checkContollingValueState();
+    if ( name == "v8" ){
+        cout << temp.fan_in.size() << endl;
+        cout << onsetTable.size() << endl;
+        cout << "############################\n";
+        for ( int i = 0 ; i < temp.onsetTable.size() ; ++i ){
+            cout << "\tosSize: " << onsetTable[i].size() << endl;
+            for ( int j = 0 ; j < temp.onsetTable[i].size() ; ++j ){
+                cout << "\t\tindex: " << j << endl;
+                cout << onsetTable[i][j] << ", ";
+            }
+            cout << endl;
+        }
+        cout << offsetTable.size() << endl;
+        cout << "############################\n";
+        for ( int i = 0 ; i < temp.offsetTable.size() ; ++i ){
+            for ( int j = 0 ; j < temp.offsetTable[i].size() ; ++j ){
+                cout << offsetTable[i][j] << ", ";
+            }
+            cout << endl;
+        }
+        cout << "############################\n";
+    }
+    for ( auto& fanin : temp.fan_in ){
+        if ( fanin.ptr->value == -1 ){
+            if ( value == 1 ){
+                if ( !fanin.inverter ){
+                    if ( fanin.ctrlVal == 1 ){
+                        fanin.ptr->value = 1;
+                        implyGateList.push_back(fanin.ptr);
+                    }
+                }else {
+                    if ( fanin.ctrlVal == 1 ){
+                        fanin.ptr->value = 0;
+                        implyGateList.push_back(fanin.ptr);
+                    }
+                }
+            }
+            else{
+                if ( !fanin.inverter ){
+                    if ( fanin.ctrlVal == 0 ){
+                        fanin.ptr->value = 0;
+                        implyGateList.push_back(fanin.ptr);
+                    }
+                }else {
+                    if ( fanin.ctrlVal == 0 ){
+                        fanin.ptr->value = 1;
+                        implyGateList.push_back(fanin.ptr);
+                    }
+                }
+            }
+        }
+    }
+    return implyGateList;
+}
+
+int Gate::directEvalRes(){
     int weightSum = 0;
     for ( int i = 0 ; i < fan_in.size() ; ++i ){
         if ( !fan_in[i].inverter ){
-            weightSum += (fan_in[i].ptr->value == 1) ? fan_in[i].weight : 0;
+            if ( fan_in[i].ptr->value != -1 ){
+                weightSum += (fan_in[i].ptr->value == 1) ? fan_in[i].weight : 0;
+                totalWeight -= fan_in[i].weight;
+                if ( name == "v8" ){
+                    cout << "===============\n";
+                }
+            }
         }
         else{
-            weightSum += (fan_in[i].ptr->value == 0) ? fan_in[i].weight : 0;
+            if ( fan_in[i].ptr->value != -1 ){
+                weightSum += (fan_in[i].ptr->value == 0) ? fan_in[i].weight : 0;
+                totalWeight -= fan_in[i].weight;
+                if ( name == "v8" ){
+                    cout << "===============\n";
+                }
+            }
         }
-        if ( weightSum >= thresholdVal )
-            return true;
+        if ( weightSum  >= thresholdVal ){
+            return 1;
+        }
+        else if ( totalWeight + weightSum < thresholdVal ){
+            return 0;
+        }
     }
-    return false;
+    if ( name == "v8" ){
+        cout << "..........................\n";
+        cout << "weightSum: " << weightSum << " totalWeight: " << totalWeight <<endl;
+    }
+    return -1;
 }
 
 bool Gate::exhaustiveChecking(){

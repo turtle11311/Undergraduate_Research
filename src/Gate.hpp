@@ -113,11 +113,13 @@ public:
     void _Debug_Fanout_Cone();
     int evalIndirectImnplicationList( int mode );
 
-    bool directEvalRes();
+    std::vector<Gate*> backwardChecking();
+    int directEvalRes();
     const ThresholdInput& getInput(const Gate* target);
     void _Debug_Gate_Information();
     void refreshDeterminedFaninCount(bool);
     bool exhaustiveChecking();
+
     int sideInputControllingValCount;       /*!< sum of number of sideInput's controlling Val*/
     int thresholdVal;                       /*!< Threshold value of this gate */
     GateType type;                          /*!< Type of the gate*/
@@ -134,4 +136,6 @@ public:
     int onsetStage, offsetStage;
     const static int indirectLevelConstraint = 3;
     int determinedFaninCount;
+    int totalWeight;
+    int constTotalWeight;
 };

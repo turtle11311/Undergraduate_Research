@@ -27,8 +27,13 @@ void ThresholdNetwork::foreachGateAttr()
         gate->evalDominators();
         gate->evalFanoutCone();
     }
-    for (auto &gate : gatePool)
+    for (auto &gate : gatePool){
         gate.second->fanoutCone.erase(gate.second);
+        for ( auto& ti : gate.second->fan_in ){
+            gate.second->constTotalWeight += ti.weight;
+        }
+        gate.second->totalWeight = gate.second->constTotalWeight;
+    }
     for (auto &gate : gatePool) {
         gate.second->evalSideInput();
         gate.second->evalCriticalEffectVectors();
@@ -97,6 +102,15 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                             }
                         }
                     }
+                    if ( fanout->name == "v8" )
+                        cout << "got u1!!!!!!!!!!!!!\n";
+                    std::vector<Gate*> implyGateList = fanout->backwardChecking();
+                    for ( Gate* implyGate : implyGateList ){
+                        cout << "\timply " << implyGate->name << " with backwardChecking.\n";
+                        queue.push_back(ImplicationGate({implyGate,FORWARD}));
+                        queue.push_back(ImplicationGate({implyGate,BACKWARD}));
+                        modifyList.push_back(implyGate);
+                    }
                 }
                 else{
                     cout << "\tcur->fanout: " << fanout->name << endl;
@@ -113,13 +127,19 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanout,BACKWARD}));
                                 modifyList.push_back(fanout);
                             }
-                            else if ( fanout->exhaustiveChecking() ){
-                                cout << "\t\t\tthis fanout's all fanin has been determined.\n";
-                                fanout->value = fanout->directEvalRes() ? 1 : 0;
-                                cout << "\t\t\t\t\timply " << fanout->name << " = " << fanout->value << endl;
-                                queue.push_back(ImplicationGate({fanout,FORWARD}));
-                                queue.push_back(ImplicationGate({fanout,BACKWARD}));
-                                modifyList.push_back(fanout);
+                            else{
+                                fanout->totalWeight = fanout->constTotalWeight;
+                                int directEvalResTemp = fanout->directEvalRes();
+                                if ( directEvalResTemp == -1)
+                                    cout << "\t\t\tthis gate's value can't determined.\n";
+                                else {
+                                    cout << "\t\t\tthis fanout's all fanin has been determined.\n";
+                                    fanout->value = directEvalResTemp ? 1 : 0;
+                                    cout << "\t\t\t\t\timply " << fanout->name << " = " << fanout->value << endl;
+                                    queue.push_back(ImplicationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplicationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
                             }
                         }
                         else{
@@ -133,13 +153,19 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanout,BACKWARD}));
                                 modifyList.push_back(fanout);
                             }
-                            else if ( fanout->exhaustiveChecking()){
-                                cout << "\t\t\tthis fanout's all fanin has been determined.\n";
-                                fanout->value = fanout->directEvalRes() ? 1 : 0;
-                                cout << "\t\t\t\t\timply " << fanout->name << " = " << fanout->value << endl;
-                                queue.push_back(ImplicationGate({fanout,FORWARD}));
-                                queue.push_back(ImplicationGate({fanout,BACKWARD}));
-                                modifyList.push_back(fanout);
+                            else{
+                                fanout->totalWeight = fanout->constTotalWeight;
+                                int directEvalResTemp = fanout->directEvalRes();
+                                if ( directEvalResTemp == -1)
+                                    cout << "\t\t\tthis gate's value can't determined.\n";
+                                else {
+                                    cout << "\t\t\tthis fanout's all fanin has been determined.\n";
+                                    fanout->value = directEvalResTemp ? 1 : 0;
+                                    cout << "\t\t\t\t\timply " << fanout->name << " = " << fanout->value << endl;
+                                    queue.push_back(ImplicationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplicationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
                             }
                         }
                     }
@@ -156,13 +182,19 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanout,BACKWARD}));
                                 modifyList.push_back(fanout);
                             }
-                            else if ( fanout->exhaustiveChecking() ){
-                                cout << "\t\t\tthis fanout's all fanin has been determined.\n";
-                                fanout->value = fanout->directEvalRes() ? 1 : 0;
-                                cout << "\t\t\t\t\timply " << fanout->name << " = " << fanout->value << endl;
-                                queue.push_back(ImplicationGate({fanout,FORWARD}));
-                                queue.push_back(ImplicationGate({fanout,BACKWARD}));
-                                modifyList.push_back(fanout);
+                            else{
+                                fanout->totalWeight = fanout->constTotalWeight;
+                                int directEvalResTemp = fanout->directEvalRes();
+                                if ( directEvalResTemp == -1)
+                                    cout << "\t\t\tthis gate's value can't determined.\n";
+                                else {
+                                    cout << "\t\t\tthis fanout's all fanin has been determined.\n";
+                                    fanout->value = directEvalResTemp ? 1 : 0;
+                                    cout << "\t\t\t\t\timply " << fanout->name << " = " << fanout->value << endl;
+                                    queue.push_back(ImplicationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplicationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
                             }
                         }
                         else{
@@ -176,13 +208,19 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanout,BACKWARD}));
                                 modifyList.push_back(fanout);
                             }
-                            else if ( fanout->exhaustiveChecking() ){
-                                cout << "\t\t\tthis fanout's all fanin has been determined.\n";
-                                fanout->value = fanout->directEvalRes() ? 1 : 0;
-                                cout << "\t\t\t\t\timply " << fanout->name << " = " << fanout->value << endl;
-                                queue.push_back(ImplicationGate({fanout,FORWARD}));
-                                queue.push_back(ImplicationGate({fanout,BACKWARD}));
-                                modifyList.push_back(fanout);
+                            else{
+                                fanout->totalWeight = fanout->constTotalWeight;
+                                int directEvalResTemp = fanout->directEvalRes();
+                                if ( directEvalResTemp == -1)
+                                    cout << "\t\t\tthis gate's value can't determined.\n";
+                                else {
+                                    cout << "\t\t\tthis fanout's all fanin has been determined.\n";
+                                    fanout->value = directEvalResTemp ? 1 : 0;
+                                    cout << "\t\t\t\t\timply " << fanout->name << " = " << fanout->value << endl;
+                                    queue.push_back(ImplicationGate({fanout,FORWARD}));
+                                    queue.push_back(ImplicationGate({fanout,BACKWARD}));
+                                    modifyList.push_back(fanout);
+                                }
                             }
                         }
                     }
@@ -236,11 +274,11 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
                             }
-                            else if ( cur.ptr->evalIndirectImnplicationList(1)-1 < Gate::indirectLevelConstraint ){
-                                cout << "WTF" << endl;
-                                indirectMode = true;
-                                indirectList.push_back(cur.ptr);
-                            }
+                            // else if ( cur.ptr->evalIndirectImnplicationList(1)-1 < Gate::indirectLevelConstraint ){
+                            //     cout << "WTF" << endl;
+                            //     indirectMode = true;
+                            //     indirectList.push_back(cur.ptr);
+                            // }
                         }else {
                             cout << "\t\t\thas inverter" << endl;
                             if ( cur.ptr->value == 1 ){
@@ -252,11 +290,11 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
                             }
-                            else if ( cur.ptr->evalIndirectImnplicationList(1)-1 < Gate::indirectLevelConstraint ){
-                                cout << "WTF" << endl;
-                                indirectMode = true;
-                                indirectList.push_back(cur.ptr);
-                            }
+                            // else if ( cur.ptr->evalIndirectImnplicationList(1)-1 < Gate::indirectLevelConstraint ){
+                            //     cout << "WTF" << endl;
+                            //     indirectMode = true;
+                            //     indirectList.push_back(cur.ptr);
+                            // }
                         }
                     }
                     else if ( fanin.ctrlVal == 0 ){
@@ -272,10 +310,10 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
                             }
-                            else if ( cur.ptr->evalIndirectImnplicationList(0)-1 < Gate::indirectLevelConstraint ){
-                                indirectMode = true;
-                                indirectList.push_back(cur.ptr);
-                            }
+                            // else if ( cur.ptr->evalIndirectImnplicationList(0)-1 < Gate::indirectLevelConstraint ){
+                            //     indirectMode = true;
+                            //     indirectList.push_back(cur.ptr);
+                            // }
                         }else {
                             cout << "\t\t\thas inverter" << endl;
                             if ( cur.ptr->value == 0 ){
@@ -287,10 +325,10 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                                 queue.push_back(ImplicationGate({fanin.ptr,BACKWARD}));
                                 modifyList.push_back(fanin.ptr);
                             }
-                            else if ( cur.ptr->evalIndirectImnplicationList(0)-1 < Gate::indirectLevelConstraint ){
-                                indirectMode = true;
-                                indirectList.push_back(cur.ptr);
-                            }
+                            // else if ( cur.ptr->evalIndirectImnplicationList(0)-1 < Gate::indirectLevelConstraint ){
+                            //     indirectMode = true;
+                            //     indirectList.push_back(cur.ptr);
+                            // }
                         }
                     }
                 }
@@ -354,9 +392,9 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         MA0 = iterativeImplication(target);
         cout << target->name << "\'s MA0-> ";
         _Debug_Mandatory_Assignments(MA0);
-        intersectionOfIndirectTarget(target, MA0);
-        reinitializeModifiyList(initialListSize,MA0,target);
-        if ( indirectMode ) indirectMode = false;
+        // intersectionOfIndirectTarget(target, MA0);
+        // reinitializeModifiyList(initialListSize,MA0,target);
+        // if ( indirectMode ) indirectMode = false;
         /* ------------------------stuck at 1------------------------ */
         cout << "Start SA1" << endl;
         cout << "cur modifyList size: " << modifyList.size() <<endl;
@@ -369,9 +407,9 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         MA1 = iterativeImplication(target);
         cout << target->name << "\'s MA1-> ";
         _Debug_Mandatory_Assignments(MA1);
-        intersectionOfIndirectTarget(target, MA1);
-        reinitializeModifiyList(initialListSize,MA1,target);
-        if ( indirectMode ) indirectMode = false;
+        // intersectionOfIndirectTarget(target, MA1);
+        // reinitializeModifiyList(initialListSize,MA1,target);
+        // if ( indirectMode ) indirectMode = false;
 
         std::set<GateWithValue> MA;
         cout << target->name << "\'s MASET_RES: " << endl;
