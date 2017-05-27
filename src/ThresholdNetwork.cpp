@@ -102,11 +102,9 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                             }
                         }
                     }
-                    if ( fanout->name == "v8" )
-                        cout << "got u1!!!!!!!!!!!!!\n";
                     std::vector<Gate*> implyGateList = fanout->backwardChecking();
                     for ( Gate* implyGate : implyGateList ){
-                        cout << "\timply " << implyGate->name << " with backwardChecking.\n";
+                        implyGate->value = fanout->value == 1 ? 1 : 0;
                         queue.push_back(ImplicationGate({implyGate,FORWARD}));
                         queue.push_back(ImplicationGate({implyGate,BACKWARD}));
                         modifyList.push_back(implyGate);
@@ -411,26 +409,22 @@ void ThresholdNetwork::evalMandatoryAssignments(){
         // reinitializeModifiyList(initialListSize,MA1,target);
         // if ( indirectMode ) indirectMode = false;
 
-        std::set<GateWithValue> MA;
+        std::set<Gate*> MA;
         cout << target->name << "\'s MASET_RES: " << endl;
         for ( auto it0 = MA0.begin() ; it0 != MA0.end(); ++it0 ){
             for ( auto it1 = MA1.begin(); it1 != MA1.end(); ++it1 ){
                 if ( (*it0).ptr == (*it1).ptr ){
                     if ( (*it0).value != (*it1).value ){
-                        MA.insert(GateWithValue({(*it1).ptr,-1}));
+                        MA.insert((*it1).ptr);
                     }
                 }
             }
         }
+        MA.erase(target);
         cout << endl;
         cout << "SIZE: " << MA.size() << endl;
-        for ( auto& it : MA ){
-            cout << it.ptr->name << " ";
-        }
-        cout << endl;
-        cout << "********************************\n";
-        for (const GateWithValue& ma : MA) {
-            cout << ma.ptr->name << " ";
+        for (Gate* ma : MA) {
+            cout << ma->name << " ";
         }
         cout << endl;
         cout << "**************************************\n";

@@ -61,72 +61,31 @@ void Gate::evalCriticalEffectVectors()
 }
 
 std::vector<Gate*> Gate::backwardChecking(){
-    if ( name == "v8" )
-        cout << "got u2!!!!!!!!!!!!!\n";
     std::vector<Gate*> implyGateList;
-    Gate temp = *this;
-    temp.thresholdVal = thresholdVal;
-    temp.fan_in.clear();
-    for ( auto& fanin : fan_in ){
-        if ( fanin.ptr->value != -1 ){
-                temp.thresholdVal -= fanin.ptr->value;
-        }
-        temp.fan_in.push_back(fanin);
+    int curWeightSum = 0;
+    // mark the non-deterministic fanin
+    std::vector<int> careBit;
+    for ( int i = 0 ; i < fan_in.size(); ++i ){
+        if ( fan_in[i].ptr->value == -1 )
+            careBit.push_back(i);
+        else
+            curWeightSum += fan_in[i].weight;
     }
-    temp.onsetTable.clear();
-    temp.offsetTable.clear();
-    temp.evalCriticalEffectVectors();
-    temp.checkContollingValueState();
-    if ( name == "v8" ){
-        cout << temp.fan_in.size() << endl;
-        cout << onsetTable.size() << endl;
-        cout << "############################\n";
-        for ( int i = 0 ; i < temp.onsetTable.size() ; ++i ){
-            cout << "\tosSize: " << onsetTable[i].size() << endl;
-            for ( int j = 0 ; j < temp.onsetTable[i].size() ; ++j ){
-                cout << "\t\tindex: " << j << endl;
-                cout << onsetTable[i][j] << ", ";
-            }
-            cout << endl;
-        }
-        cout << offsetTable.size() << endl;
-        cout << "############################\n";
-        for ( int i = 0 ; i < temp.offsetTable.size() ; ++i ){
-            for ( int j = 0 ; j < temp.offsetTable[i].size() ; ++j ){
-                cout << offsetTable[i][j] << ", ";
-            }
-            cout << endl;
-        }
-        cout << "############################\n";
-    }
-    for ( auto& fanin : temp.fan_in ){
-        if ( fanin.ptr->value == -1 ){
-            if ( value == 1 ){
-                if ( !fanin.inverter ){
-                    if ( fanin.ctrlVal == 1 ){
-                        fanin.ptr->value = 1;
-                        implyGateList.push_back(fanin.ptr);
-                    }
-                }else {
-                    if ( fanin.ctrlVal == 1 ){
-                        fanin.ptr->value = 0;
-                        implyGateList.push_back(fanin.ptr);
-                    }
+    if ( value == 1 ){
+        for ( int i = 0 ; i < careBit.size();  ++i ){
+            int weightTemp = 0;
+            for ( int j = 0 ; j < fan_in.size() ; ++i ){
+                if ( fan_in[j].ptr->value == -1 && j != careBit[i] ){
+                    weightTemp += fan_in[j].weight;
                 }
             }
-            else{
-                if ( !fanin.inverter ){
-                    if ( fanin.ctrlVal == 0 ){
-                        fanin.ptr->value = 0;
-                        implyGateList.push_back(fanin.ptr);
-                    }
-                }else {
-                    if ( fanin.ctrlVal == 0 ){
-                        fanin.ptr->value = 1;
-                        implyGateList.push_back(fanin.ptr);
-                    }
-                }
-            }
+            if ( curWeightSum + weightTemp < thresholdVal )
+                implyGateList.push_back(fan_in[careBit[i]].ptr);
+        }
+    }else{
+        for ( int i = 0 ; i < careBit.size() ; ++i ){
+            if ( curWeightSum + fan_in[i].weight >= thresholdVal )
+                implyGateList.push_back(fan_in[careBit[i]].ptr);
         }
     }
     return implyGateList;
