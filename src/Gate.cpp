@@ -79,13 +79,18 @@ std::vector<Gate*> Gate::backwardChecking(){
                     weightTemp += fan_in[j].weight;
                 }
             }
-            if ( curWeightSum + weightTemp < thresholdVal )
+            if ( curWeightSum + weightTemp < thresholdVal ){
+                fan_in[careBit[i]].ptr->value = !fan_in[careBit[i]].inverter ? 1 : 0;
+                curWeightSum += fan_in[careBit[i]].weight;
                 implyGateList.push_back(fan_in[careBit[i]].ptr);
+            }
         }
     }else{
         for ( int i = 0 ; i < careBit.size() ; ++i ){
-            if ( curWeightSum + fan_in[i].weight >= thresholdVal )
+            if ( curWeightSum + fan_in[careBit[i]].weight >= thresholdVal ){
+                fan_in[careBit[i]].ptr->value = !fan_in[careBit[i]].inverter ? 0 : 1;
                 implyGateList.push_back(fan_in[careBit[i]].ptr);
+            }
         }
     }
     return implyGateList;

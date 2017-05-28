@@ -104,7 +104,6 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                     }
                     std::vector<Gate*> implyGateList = fanout->backwardChecking();
                     for ( Gate* implyGate : implyGateList ){
-                        implyGate->value = fanout->value == 1 ? 1 : 0;
                         queue.push_back(ImplicationGate({implyGate,FORWARD}));
                         queue.push_back(ImplicationGate({implyGate,BACKWARD}));
                         modifyList.push_back(implyGate);
