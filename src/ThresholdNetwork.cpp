@@ -221,6 +221,20 @@ std::set<GateWithValue> ThresholdNetwork::iterativeImplication( Gate* target){
                             }
                         }
                     }
+                    else {
+                        fanout->totalWeight = fanout->constTotalWeight;
+                        int directEvalResTemp = fanout->directEvalRes();
+                        if ( directEvalResTemp == -1)
+                        cout << "\t\t\tthis gate's value can't determined.\n";
+                        else {
+                            cout << "\t\t\tthis fanout's all fanin has been determined.\n";
+                            fanout->value = directEvalResTemp ? 1 : 0;
+                            cout << "\t\t\t\t\timply " << fanout->name << " = " << fanout->value << endl;
+                            queue.push_back(ImplicationGate({fanout,FORWARD}));
+                            queue.push_back(ImplicationGate({fanout,BACKWARD}));
+                            modifyList.push_back(fanout);
+                        }
+                    }
                 }
             }
         }

@@ -74,7 +74,7 @@ std::vector<Gate*> Gate::backwardChecking(){
     if ( value == 1 ){
         for ( int i = 0 ; i < careBit.size();  ++i ){
             int weightTemp = 0;
-            for ( int j = 0 ; j < fan_in.size() ; ++i ){
+            for ( int j = 0 ; j < fan_in.size() ; ++j ){
                 if ( fan_in[j].ptr->value == -1 && j != careBit[i] ){
                     weightTemp += fan_in[j].weight;
                 }
