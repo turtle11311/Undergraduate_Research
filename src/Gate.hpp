@@ -8,11 +8,11 @@
 * The class for threshold gate
 */
 #pragma once
+#include <set>
 #include <string>
-#include <vector>
 #include <tuple>
 #include <utility>
-#include <set>
+#include <vector>
 class Gate;
 
 /*!
@@ -22,7 +22,10 @@ class Gate;
 * Third(2) Po mean the gate has no fanout
 * Forth(3) Internal mean the gate has both fanin & fanout
 */
-enum GateType { Constant, PI, PO, Internal };
+enum GateType { Constant,
+    PI,
+    PO,
+    Internal };
 /*!
 * \typedef std::vector<std::vector<int>> PatternTable
 * Storage of onset/offset critical effect vectors
@@ -33,16 +36,16 @@ typedef std::vector<std::vector<int>> PatternTable;
 * \breif Threshold gate input
 */
 struct ThresholdInput {
-    Gate* ptr;          /*!< Pointer of input gate */
-    int weight;         /*!< Weight of input */
-    bool inverter;      /*!< This input has inverter */
-    int ctrlVal;        /*!< Controlling value of input */
+    Gate* ptr;     /*!< Pointer of input gate */
+    int weight;    /*!< Weight of input */
+    bool inverter; /*!< This input has inverter */
+    int ctrlVal;   /*!< Controlling value of input */
 };
 /*!
 * \struct GateAttr Gate.hpp
 * \brief The class for threshold gate in parsing
 */
-struct GateAttr{
+struct GateAttr {
     char* name;
     int thresholdVal;
 };
@@ -111,7 +114,7 @@ public:
     void checkContollingValueState();
     void _Debug_Side_Inputs();
     void _Debug_Fanout_Cone();
-    int evalIndirectImnplicationList( int mode );
+    int evalIndirectImnplicationList(int mode);
 
     std::vector<Gate*> backwardChecking();
     int directEvalRes();
@@ -120,19 +123,19 @@ public:
     void refreshDeterminedFaninCount(bool);
     bool exhaustiveChecking();
 
-    int sideInputControllingValCount;       /*!< sum of number of sideInput's controlling Val*/
-    int thresholdVal;                       /*!< Threshold value of this gate */
-    GateType type;                          /*!< Type of the gate*/
-    std::string name;                       /*!< Name of the gate */
-    std::vector<ThresholdInput> fan_in;     /*!< List of gate's inputs */
-    std::vector<Gate*> fan_out;             /*!< List of gate's outputs */
-    PatternTable onsetTable;                /*!< Vector of vector of all the onset vectors*/
-    PatternTable offsetTable;               /*!< Vector of vector of all the offset vectors*/
-    std::set<Gate*> dominators;             /*!< A set of this gate's dominators */
-    std::set<Gate*> fanoutCone;             /*!< A set of this gate's fanoutCone */
-    std::set<Gate*> sideInputs;             /*!< A set of this gate's sideinputs */
-    std::set<Gate*> mandotoryAssignments;   /*!< A set of this gate's mandotoryAssignments */
-    short value;                            /*!< gate value */
+    int sideInputControllingValCount;     /*!< sum of number of sideInput's controlling Val*/
+    int thresholdVal;                     /*!< Threshold value of this gate */
+    GateType type;                        /*!< Type of the gate*/
+    std::string name;                     /*!< Name of the gate */
+    std::vector<ThresholdInput> fan_in;   /*!< List of gate's inputs */
+    std::vector<Gate*> fan_out;           /*!< List of gate's outputs */
+    PatternTable onsetTable;              /*!< Vector of vector of all the onset vectors*/
+    PatternTable offsetTable;             /*!< Vector of vector of all the offset vectors*/
+    std::set<Gate*> dominators;           /*!< A set of this gate's dominators */
+    std::set<Gate*> fanoutCone;           /*!< A set of this gate's fanoutCone */
+    std::set<Gate*> sideInputs;           /*!< A set of this gate's sideinputs */
+    std::set<Gate*> mandotoryAssignments; /*!< A set of this gate's mandotoryAssignments */
+    short value;                          /*!< gate value */
     int onsetStage, offsetStage;
     const static int indirectLevelConstraint = 3;
     int determinedFaninCount;
