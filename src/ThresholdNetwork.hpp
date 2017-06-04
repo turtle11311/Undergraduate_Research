@@ -38,7 +38,6 @@ struct GateWithValue {
     }
 };
 
-class ThresholdNetworkDebugger;
 /*!
  * \class ThresholdNetwork ThresholdNetwork.hpp
  * \brief The class for threshold gate network
