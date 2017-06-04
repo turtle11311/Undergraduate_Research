@@ -118,17 +118,11 @@ int Gate::directEvalRes()
             if (fan_in[i].ptr->value != -1) {
                 weightSum += (fan_in[i].ptr->value == 1) ? fan_in[i].weight : 0;
                 totalWeight -= fan_in[i].weight;
-                if (name == "v8") {
-                    cout << "===============\n";
-                }
             }
         } else {
             if (fan_in[i].ptr->value != -1) {
                 weightSum += (fan_in[i].ptr->value == 0) ? fan_in[i].weight : 0;
                 totalWeight -= fan_in[i].weight;
-                if (name == "v8") {
-                    cout << "===============\n";
-                }
             }
         }
         if (weightSum >= thresholdVal) {
@@ -136,10 +130,6 @@ int Gate::directEvalRes()
         } else if (totalWeight + weightSum < thresholdVal) {
             return 0;
         }
-    }
-    if (name == "v8") {
-        cout << "..........................\n";
-        cout << "weightSum: " << weightSum << " totalWeight: " << totalWeight << endl;
     }
     return -1;
 }
