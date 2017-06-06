@@ -464,7 +464,7 @@ void ThresholdNetwork::_Debug_Mandatory_Assignments(std::set<GateWithValue>& MA)
 
 void ThresholdNetwork::evalMandatoryAssignments()
 {
-    cout << "evalMandatoryAssignments start." << endl;
+    //cout << "evalMandatoryAssignments start." << endl;
     std::set<GateWithValue> MA0;
     std::set<GateWithValue> MA1;
     /* --------------------------collect target------------------------ */
@@ -480,28 +480,28 @@ void ThresholdNetwork::evalMandatoryAssignments()
         for (Gate* sideInput : target->sideInputs)
             implySideInputVal(target, sideInput);
         /* ------------------------stuck at 0------------------------ */
-        cout << "Start SA0" << endl;
-        cout << "cur modifyList size: " << modifyList.size() << endl;
+        //cout << "Start SA0" << endl;
+        //cout << "cur modifyList size: " << modifyList.size() << endl;
         target->value = 1;
         //target->refreshDeterminedFaninCount(true);
         queue.clear();
-        cout << "Target " << target->name << "\'s initialMA: ";
+        //cout << "Target " << target->name << "\'s initialMA: ";
         for (Gate* modifiedGate : modifyList) {
-            cout << modifiedGate->name << ": " << modifiedGate->value << ", ";
+            //cout << modifiedGate->name << ": " << modifiedGate->value << ", ";
             queue.push_back(ImplicationGate({ modifiedGate, FORWARD }));
             queue.push_back(ImplicationGate({ modifiedGate, BACKWARD }));
         }
-        cout << endl;
+        //cout << endl;
         int initialListSize = modifyList.size();
         MA0 = iterativeImplication(target);
-        cout << target->name << "\'s MA0-> ";
-        _Debug_Mandatory_Assignments(MA0);
+        //cout << target->name << "\'s MA0-> ";
+        //_Debug_Mandatory_Assignments(MA0);
         // intersectionOfIndirectTarget(target, MA0);
         // reinitializeModifiyList(initialListSize,MA0,target);
         // if ( indirectMode ) indirectMode = false;
         /* ------------------------stuck at 1------------------------ */
-        cout << "Start SA1" << endl;
-        cout << "cur modifyList size: " << modifyList.size() << endl;
+        //cout << "Start SA1" << endl;
+        //cout << "cur modifyList size: " << modifyList.size() << endl;
         target->value = 0;
         queue.clear();
         for (Gate* modifiedGate : modifyList) {
@@ -509,8 +509,8 @@ void ThresholdNetwork::evalMandatoryAssignments()
             queue.push_back(ImplicationGate({ modifiedGate, BACKWARD }));
         }
         MA1 = iterativeImplication(target);
-        cout << target->name << "\'s MA1-> ";
-        _Debug_Mandatory_Assignments(MA1);
+        //cout << target->name << "\'s MA1-> ";
+        //_Debug_Mandatory_Assignments(MA1);
         // intersectionOfIndirectTarget(target, MA1);
         // reinitializeModifiyList(initialListSize,MA1,target);
         // if ( indirectMode ) indirectMode = false;
@@ -520,15 +520,15 @@ void ThresholdNetwork::evalMandatoryAssignments()
         for (auto it0 = MA0.begin(); it0 != MA0.end(); ++it0) {
             for (auto it1 = MA1.begin(); it1 != MA1.end(); ++it1) {
                 if ((*it0).ptr == (*it1).ptr) {
-                    if ((*it0).value != (*it1).value) {
+                    if ((*it0).value != (*it1).value && target->fanoutCone.find(it0->ptr) == target->fanoutCone.end() ) {
                         MA.insert((*it1).ptr);
                     }
                 }
             }
         }
         MA.erase(target);
-        cout << endl;
-        cout << "SIZE: " << MA.size() << endl;
+        //cout << endl;
+        //cout << "SIZE: " << MA.size() << endl;
         for (Gate* ma : MA) {
             cout << ma->name << " ";
         }
